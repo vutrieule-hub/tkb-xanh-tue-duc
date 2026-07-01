@@ -1,0 +1,2632 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TKB · Xanh Tuệ Đức</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<style>
+:root{
+  --bg:#F5F5F7;--sf:#FFF;--sf2:#F5F5F7;
+  --b:.5px solid rgba(0,0,0,.1);--bs:.5px solid rgba(0,0,0,.15);
+  --tx:#1D1D1F;--tx2:#6E6E73;--tx3:#AEAEB2;
+  --ac:#007AFF;--ac2:rgba(0,122,255,.12);
+  --sh:0 1px 4px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shm:0 4px 24px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+  --r:18px;--rm:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif;
+  background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ── */
+header{background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(24px);
+  -webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:var(--bs);
+  position:sticky;top:0;z-index:300}
+.hdr{max-width:1600px;margin:0 auto;padding:0 28px;display:flex;align-items:center;height:52px;gap:12px}
+.logo{font-size:16px;font-weight:700;letter-spacing:-.4px;display:flex;align-items:center;gap:7px;flex-shrink:0}
+.logo-icon{width:27px;height:27px;border-radius:7px;background:linear-gradient(145deg,#34C759,#007AFF);
+  display:flex;align-items:center;justify-content:center;font-size:14px}
+.week-sel{font-size:12px;color:var(--tx2);background:rgba(0,0,0,.04);border:var(--bs);
+  padding:3px 10px 3px 10px;border-radius:20px;cursor:pointer;
+  display:flex;align-items:center;gap:5px;white-space:nowrap}
+.week-sel:hover{background:rgba(0,0,0,.07)}
+.flex1{flex:1}
+.seg{display:flex;background:rgba(0,0,0,.05);border-radius:9px;padding:2px;gap:1px}
+.seg-btn{padding:4px 14px;border-radius:7px;border:none;background:transparent;
+  color:var(--tx2);cursor:pointer;font-size:13px;font-weight:500;
+  transition:all .18s;font-family:inherit}
+.seg-btn.on{background:var(--sf);color:var(--tx);box-shadow:var(--sh)}
+.edit-toggle{padding:5px 13px;border-radius:8px;border:var(--bs);
+  background:var(--sf);color:var(--tx2);cursor:pointer;font-size:12px;font-weight:600;
+  font-family:inherit;box-shadow:var(--sh);transition:all .18s;display:flex;align-items:center;gap:5px}
+.edit-toggle.on{background:#FF9500;border-color:#FF9500;color:#fff}
+
+/* ── PAGE ── */
+.page{max-width:1600px;margin:0 auto;padding:18px 28px 48px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.pills{display:flex;gap:5px;flex-wrap:wrap}
+.pill{padding:5px 14px;border-radius:20px;border:var(--bs);background:var(--sf);
+  color:var(--tx2);cursor:pointer;font-size:13px;font-weight:500;
+  transition:all .18s;font-family:inherit;box-shadow:var(--sh)}
+.pill.on{background:var(--ac);border-color:var(--ac);color:#fff;box-shadow:0 2px 10px rgba(0,122,255,.28)}
+.pill:hover:not(.on){color:var(--ac);border-color:rgba(0,122,255,.4)}
+.vtabs{display:flex;gap:1px;background:rgba(0,0,0,.05);border-radius:9px;padding:2px}
+.vtab{padding:4px 14px;border-radius:7px;border:none;background:transparent;
+  color:var(--tx2);cursor:pointer;font-size:13px;font-weight:500;
+  transition:all .18s;font-family:inherit}
+.vtab.on{background:var(--sf);color:var(--tx);box-shadow:var(--sh)}
+
+/* ── GRID ── */
+.maingrid{display:grid;grid-template-columns:1fr 268px;gap:14px;align-items:start}
+@media(max-width:1080px){.maingrid{grid-template-columns:1fr}}
+
+/* ── TKB TABLE ── */
+.tkb-wrap{background:var(--sf);border:var(--bs);border-radius:var(--r);
+  overflow:hidden;box-shadow:var(--shm)}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg);padding:9px 10px;text-align:center;border-bottom:var(--bs);white-space:nowrap}
+th.th-day{font-size:13px;font-weight:600;color:var(--tx);letter-spacing:-.2px}
+th.th-meta{font-size:11px;font-weight:600;color:var(--tx3);letter-spacing:.3px;text-transform:uppercase}
+td{border:var(--b);padding:0;vertical-align:middle}
+.td-buoi{background:var(--bg);border-right:var(--bs);text-align:center;padding:0 6px;
+  font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase;width:40px}
+.td-tiet{background:var(--bg);border-right:var(--bs);text-align:center;width:26px;
+  font-size:11px;font-weight:700;color:var(--tx3);font-variant-numeric:tabular-nums}
+tr.sess td{background:var(--bg);padding:5px 14px;font-size:10px;font-weight:700;
+  letter-spacing:1.2px;color:var(--tx3);text-transform:uppercase;
+  border-top:var(--bs);border-bottom:var(--bs)}
+.cell{padding:7px 9px;min-height:50px;display:flex;flex-direction:column;
+  justify-content:center;gap:2px;transition:filter .1s}
+.cell.editable:hover{filter:brightness(.93);cursor:pointer}
+.cell.empty{background:transparent!important;min-height:50px}
+.cell.empty.editable:hover{background:rgba(0,122,255,.06)!important;cursor:pointer}
+.cell.editable[draggable="true"]{cursor:grab}
+.cell.editable[draggable="true"]:active{cursor:grabbing}
+.cell.dragging{opacity:.35}
+.cell.drag-over{outline:2px dashed var(--ac)!important;outline-offset:-2px;background:rgba(0,122,255,.08)!important}
+/* CLB ngoài giờ — band tách biệt màu vàng */
+.sess-after td{background:#FFF7E6!important;color:#854F0B!important}
+.cell-after{background:repeating-linear-gradient(-45deg,#FFF7E6,#FFF7E6 6px,#FDEFCF 6px,#FDEFCF 12px)!important;
+  color:#7A4E08!important;border:1px dashed #E0A93B!important}
+.cell-after .ct{color:#A8761F!important}
+.td-buoi-after{color:#A8761F!important}
+.cs{font-size:12px;font-weight:600;line-height:1.3;letter-spacing:-.1px}
+.ct{font-size:10.5px;font-weight:400;opacity:.65}
+
+/* ── SIDEBAR ── */
+.sidebar{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--sf);border:var(--bs);border-radius:var(--r);padding:18px;box-shadow:var(--shm)}
+.card-h{font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--tx3);margin-bottom:14px}
+.leg-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;border-bottom:var(--b)}
+.leg-item:last-child{border:none}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-n{font-size:11px;color:var(--tx2);font-weight:600;margin-left:auto;font-variant-numeric:tabular-nums}
+.sbar{margin-bottom:10px}
+.sbar-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.sbar-top span:first-child{color:var(--tx2)}
+.sbar-top span:last-child{font-weight:600;color:var(--tx)}
+.sbar-track{height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
+.sbar-fill{height:100%;border-radius:2px;transition:width .5s}
+.tv-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:var(--b);font-size:12.5px}
+.tv-row:last-child{border:none}
+.tv-n{font-weight:500}
+.tv-b{background:var(--bg);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--tx2);font-weight:600;border:var(--bs)}
+.flag{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700}
+
+/* ── TEACHERS VIEW ── */
+.tv-table-wrap{background:var(--sf);border:var(--bs);border-radius:var(--r);overflow:hidden;box-shadow:var(--shm)}
+.tv-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.tv-table th{background:var(--bg);padding:9px 12px;text-align:center;border-bottom:var(--bs);
+  font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}
+.tv-table th:first-child{text-align:left;min-width:120px}
+.tv-table td{padding:8px 12px;border-bottom:var(--b);text-align:center;vertical-align:middle}
+.tv-table td:first-child{text-align:left;font-weight:500;color:var(--tx)}
+.tv-table tr:last-child td{border:none}
+.tv-table tr:hover td{background:rgba(0,122,255,.04)}
+.tv-cnt{display:inline-block;background:var(--bg);border-radius:12px;padding:2px 8px;
+  font-size:11px;font-weight:600;color:var(--tx2);border:var(--bs);min-width:28px}
+.tv-cnt.hi{background:rgba(0,122,255,.12);color:var(--ac);border-color:rgba(0,122,255,.2)}
+.tv-total{background:rgba(0,122,255,.08);font-weight:700!important;color:var(--ac)!important}
+
+/* ── SETTINGS VIEW ── */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.settings-grid{grid-template-columns:1fr}}
+/* ── INLINE COLOR PICKER (sidebar legend) ── */
+.leg-dot-btn{border:none;padding:0;cursor:pointer;position:relative;transition:transform .12s}
+.leg-dot-btn:hover{transform:scale(1.45)}
+.colp-pal{display:flex;gap:7px;flex-wrap:wrap;padding:8px 0 10px 16px}
+.colp-opt{width:26px;height:26px;border-radius:8px;border:2px solid transparent;cursor:pointer;
+  padding:0;transition:transform .1s}
+.colp-opt:hover{transform:scale(1.12)}
+.colp-opt.on{border-color:var(--tx);box-shadow:0 0 0 2px var(--sf),0 0 0 3px var(--tx)}
+.colp-reset{margin-top:10px;width:100%;font-size:12px;color:var(--tx2);background:var(--bg);
+  border:var(--bs);border-radius:8px;padding:7px;cursor:pointer;font-family:inherit}
+.colp-reset:hover{background:var(--sf2)}
+.teacher-list-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:var(--b)}
+.teacher-list-item:last-child{border:none}
+.tl-name{flex:1;font-size:13px;font-weight:500}
+.tl-del{width:24px;height:24px;border-radius:6px;border:none;background:rgba(255,59,48,.12);
+  color:#FF3B30;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .15s}
+.tl-del:hover{background:rgba(255,59,48,.22)}
+.add-row{display:flex;gap:8px;margin-top:12px}
+.add-row input{flex:1;padding:7px 11px;border:var(--bs);border-radius:var(--rs);
+  font-size:13px;font-family:inherit;background:var(--sf);color:var(--tx);outline:none}
+.add-row input:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(0,122,255,.15)}
+.btn-add{padding:7px 14px;border-radius:var(--rs);border:none;background:var(--ac);
+  color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+  transition:all .18s}
+.btn-add:hover{filter:brightness(1.1)}
+
+/* ── ANALYSIS VIEW ── */
+/* ── ANALYSIS DASHBOARD (1 lớp/lúc, rộng) ── */
+.ana-dash{max-width:1120px;margin:0 auto}
+.ana-overview{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.ana-ov-chip{flex:1;min-width:124px;padding:11px 14px;border-radius:14px;border:var(--bs);
+  background:var(--sf);cursor:pointer;text-align:left;font-family:inherit;transition:all .12s}
+.ana-ov-chip:hover{border-color:var(--ac);transform:translateY(-1px)}
+.ana-ov-chip.on{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac2);background:var(--ac2)}
+.ana-ov-chip .ov-cls{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--tx3)}
+.ana-ov-chip .ov-pct{font-size:24px;font-weight:700;line-height:1.1;margin:3px 0;color:var(--ac)}
+.ana-ov-chip .ov-stat{font-size:11px;font-weight:600}
+.ana-head{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.ana-title{font-size:26px;font-weight:700;letter-spacing:-.5px;white-space:nowrap}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;flex:1;min-width:240px}
+.metric{background:var(--bg);border-radius:14px;padding:12px 15px}
+.metric .m-lbl{font-size:11px;color:var(--tx2);line-height:1.3}
+.metric .m-val{font-size:23px;font-weight:700;letter-spacing:-.5px;margin-top:3px}
+.ana-cols{display:grid;grid-template-columns:1fr 1.25fr;gap:16px;margin-bottom:16px}
+@media(max-width:860px){.ana-cols{grid-template-columns:1fr}}
+.ana-card{background:var(--sf);border:var(--bs);border-radius:var(--r);padding:20px;box-shadow:var(--shm)}
+.ana-card-h{font-size:13px;font-weight:700;color:var(--tx2);margin-bottom:14px}
+.moet-row2{display:flex;align-items:center;gap:12px;padding:9px 11px;border-radius:9px}
+.moet-row2:nth-child(even){background:var(--bg)}
+.moet-row2.short{background:rgba(255,149,0,.12)}
+.moet-row2 .mn{flex:1;font-size:13px;color:var(--tx);font-weight:500}
+.moet-row2 .mq{font-size:12px;color:var(--tx2);white-space:nowrap}
+.moet-row2 .mq strong{color:var(--tx)}
+.moet-lbl{flex:1;min-width:0;font-family:inherit;font-size:13px;padding:5px 8px;border:var(--bs);border-radius:7px;background:var(--sf);color:var(--tx)}
+.moet-del{width:26px;height:26px;flex-shrink:0;border:none;background:rgba(255,59,48,.1);color:#FF3B30;border-radius:7px;cursor:pointer;font-size:15px}
+.moet-del:hover{background:rgba(255,59,48,.2)}
+
+/* ── DONUT ── */
+.donut-row{display:flex;justify-content:center;margin-bottom:16px}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:500;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--sf);border-radius:20px;padding:24px;width:380px;max-width:95vw;
+  box-shadow:0 20px 60px rgba(0,0,0,.2),0 4px 12px rgba(0,0,0,.1);
+  animation:slideUp .22s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.modal-h{font-size:17px;font-weight:700;letter-spacing:-.4px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);
+  cursor:pointer;font-size:16px;color:var(--tx2);display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:rgba(0,0,0,.1)}
+.form-row{margin-bottom:14px}
+.form-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--tx3);margin-bottom:5px}
+.form-input{width:100%;padding:9px 12px;border:var(--bs);border-radius:var(--rm);
+  font-size:14px;font-family:inherit;background:var(--sf);color:var(--tx);outline:none;
+  transition:border-color .18s}
+.form-input:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(0,122,255,.15)}
+.form-select{width:100%;padding:9px 12px;border:var(--bs);border-radius:var(--rm);
+  font-size:14px;font-family:inherit;background:var(--sf);color:var(--tx);outline:none;cursor:pointer}
+.modal-btns{display:flex;gap:8px;margin-top:20px}
+.btn{padding:9px 18px;border-radius:var(--rm);border:none;font-size:14px;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:all .18s;flex:1}
+.btn-primary{background:var(--ac);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-danger{background:rgba(255,59,48,.12);color:#FF3B30}
+.btn-danger:hover{background:rgba(255,59,48,.22)}
+.btn-sec{background:var(--bg);color:var(--tx2);border:var(--bs)}
+.btn-sec:hover{background:rgba(0,0,0,.08)}
+.cat-preview{width:100%;height:36px;border-radius:var(--rs);margin-top:6px;
+  display:flex;align-items:center;padding:0 12px;font-size:12px;font-weight:600;
+  transition:all .2s}
+
+/* ── WEEK MODAL ── */
+.week-item{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:var(--b)}
+.week-item:last-child{border:none}
+.week-dot{width:8px;height:8px;border-radius:50%;background:var(--tx3);flex-shrink:0}
+.week-dot.active{background:var(--ac)}
+.week-info{flex:1}
+.week-name{font-size:13px;font-weight:500}
+.week-date{font-size:11px;color:var(--tx2)}
+.week-actions{display:flex;gap:5px}
+.wbtn{padding:4px 9px;border-radius:6px;border:var(--bs);background:var(--bg);
+  color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;
+  transition:all .15s}
+.wbtn:hover{border-color:var(--ac);color:var(--ac)}
+.wbtn.set{background:var(--ac2);border-color:var(--ac);color:var(--ac)}
+
+/* ── HIDDEN ── */
+.gone{display:none!important}
+
+/* ── TOOLTIP ── */
+[data-tip]{position:relative}
+[data-tip]::before{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);background:rgba(29,29,31,.94);color:#fff;
+  font-size:12px;font-weight:400;line-height:1.5;padding:7px 11px;border-radius:9px;
+  white-space:normal;width:max-content;max-width:240px;pointer-events:none;
+  opacity:0;transition:opacity .15s;z-index:999;text-align:center;
+  box-shadow:0 4px 16px rgba(0,0,0,.2)}
+[data-tip]::after{
+  content:'';position:absolute;bottom:calc(100% + 4px);left:50%;
+  transform:translateX(-50%);border:4px solid transparent;
+  border-top-color:rgba(29,29,31,.94);pointer-events:none;
+  opacity:0;transition:opacity .15s;z-index:999}
+[data-tip]:hover::before,[data-tip]:hover::after{opacity:1}
+.tip-left[data-tip]::before{left:0;transform:none}
+.tip-left[data-tip]::after{left:14px;transform:none}
+
+/* ── CONFLICT ── */
+.cbadge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;
+  background:#FF3B30;color:#fff;border-radius:10px;font-size:11px;font-weight:700;padding:0 6px}
+.cell-cflt{outline:2px solid rgba(255,149,0,.8);outline-offset:-2px;position:relative}
+.cell-cflt::after{content:'⚠';position:absolute;top:3px;right:4px;font-size:9px;color:#FF9500}
+
+/* ── TIẾT TỰ CHỌN (CÁ NHÂN HÓA) ── */
+.cat-ca-nhan-hoa{
+  background: repeating-linear-gradient(-45deg,#E0F9F7,#E0F9F7 5px,#C5F0ED 5px,#C5F0ED 10px) !important;
+  color:#005E57 !important;
+  border:1.5px dashed #00C7BE !important;
+}
+.cat-ca-nhan-hoa .cs::before{content:'👤 ';font-size:11px}
+.cell-tc-count{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#005E57;
+  background:rgba(0,199,190,.15);border-radius:8px;padding:1px 5px;margin-top:2px}
+
+/* ── SUBJECT COUNT PANEL (ANALYSIS) ── */
+.subj-detail{margin-top:10px;border-radius:var(--rm);overflow:hidden}
+.subj-detail summary{padding:7px 10px;font-size:12px;font-weight:600;color:var(--tx2);
+  background:var(--bg);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px}
+.subj-detail summary::-webkit-details-marker{display:none}
+.subj-detail summary::before{content:'▶';font-size:9px;transition:transform .2s}
+.subj-detail[open] summary::before{transform:rotate(90deg)}
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:3px;padding:6px 0}
+.subj-item{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:6px;font-size:12px}
+.subj-item:hover{background:var(--bg)}
+.subj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.subj-name{flex:1;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subj-cnt{font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px;flex-shrink:0}
+.subj-cnt.ok{background:rgba(52,199,89,.12);color:#1A7835}
+.subj-cnt.warn{background:rgba(255,149,0,.15);color:#A85800}
+.subj-cnt.miss{background:rgba(255,59,48,.12);color:#FF3B30}
+
+/* ── STUDENTS VIEW ── */
+.hs-wrap{display:flex;gap:16px;align-items:flex-start;padding:16px}
+.hs-list-col{width:260px;flex-shrink:0}
+.hs-assign-col{flex:1;min-width:0}
+.hs-assign-col .card{overflow-x:auto}
+.hs-item{display:flex;align-items:center;gap:6px;padding:7px 4px;border-bottom:1px solid var(--sep)}
+.hs-item:last-child{border-bottom:none}
+.hs-item-name{flex:1;font-size:13px;color:var(--tx)}
+.hs-item-num{font-size:11px;color:var(--tx3);min-width:18px;text-align:center;
+  background:var(--bg);border-radius:8px;padding:1px 6px}
+.hs-btn{padding:2px 8px;border-radius:8px;border:none;font-size:12px;cursor:pointer;
+  font-family:inherit;background:transparent;color:var(--tx2)}
+.hs-btn:hover{background:var(--bg)}
+.hs-btn.view{color:var(--ac);background:rgba(0,122,255,.08)}
+.hs-btn.del{color:#FF3B30}
+.hs-assign-tbl{border-collapse:collapse;font-size:12px;white-space:nowrap}
+.hs-assign-tbl th{padding:5px 10px;background:var(--bg);color:var(--tx2);
+  font-weight:600;border-bottom:2px solid var(--sep);text-align:center}
+.hs-assign-tbl th:first-child{text-align:left;min-width:120px}
+.hs-assign-tbl td{padding:4px 6px;border-bottom:1px solid var(--sep)}
+.hs-assign-tbl tr:last-child td{border-bottom:none}
+.hs-assign-tbl td:first-child{font-size:13px;color:var(--tx);padding-left:4px}
+.hs-assign-tbl select{border:1px solid var(--sep);border-radius:6px;padding:2px 4px;
+  font-size:12px;background:var(--sf);color:var(--tx);font-family:inherit;cursor:pointer}
+.hs-assign-tbl select:focus{outline:2px solid var(--ac);outline-offset:1px}
+.hs-empty{padding:20px;text-align:center;color:var(--tx3);font-size:13px}
+
+/* ── STUDENT TKB PRINT ── */
+.stu-tkb-hdr{padding:10px 4px 14px;border-bottom:1px solid var(--sep);margin-bottom:10px}
+.stu-tkb-hdr h2{margin:0;font-size:17px;color:var(--tx)}
+.stu-tkb-hdr p{margin:2px 0 0;font-size:12px;color:var(--tx2)}
+@media print{
+  body>*:not(#stuTKBModal){display:none!important}
+  #stuTKBModal{position:static!important;background:none!important}
+  #stuTKBModal .modal{box-shadow:none!important;max-height:none!important;width:100%!important}
+  .no-print{display:none!important}
+}
+
+/* ── TEACHER TYPE TOGGLE ── */
+.type-tog{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;
+  transition:all .18s;font-family:inherit}
+.type-tog.co-huu{background:rgba(52,199,89,.1);color:#1A7835;border:1px solid rgba(52,199,89,.35)}
+.type-tog.co-huu:hover{background:rgba(52,199,89,.2)}
+.type-tog.thinh-giang{background:rgba(255,149,0,.12);color:#A85800;border:1px solid rgba(255,149,0,.35)}
+.type-tog.thinh-giang:hover{background:rgba(255,149,0,.22)}
+
+/* ── AVAIL GRID ── */
+.avail-slot{width:34px;height:26px;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;
+  border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+.avail-slot.av{background:rgba(52,199,89,.1);color:#34C759;border-color:rgba(52,199,89,.3)}
+.avail-slot.na{background:rgba(255,59,48,.12);color:#FF3B30;border-color:rgba(255,59,48,.3)}
+.avail-tbl{border-collapse:separate;border-spacing:3px;width:100%}
+.avail-tbl th{font-size:10px;font-weight:700;color:var(--tx3);text-align:center;padding:2px}
+.avail-sess{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--tx3);
+  padding:6px 0 2px;border-top:var(--b);text-align:left}
+
+/* ── TEACHER DETAIL ── */
+.tvd-wrap{overflow-x:auto;margin-top:4px}
+.tvd-tbl{border-collapse:separate;border-spacing:3px}
+.tvd-th{padding:4px 10px;font-size:10px;font-weight:700;color:var(--tx3);text-align:center;background:var(--bg);border-radius:5px}
+.tvd-cell{width:88px;height:32px;border-radius:6px;text-align:center;padding:0 4px;font-size:10px;font-weight:600;vertical-align:middle}
+.tvd-free{background:var(--bg);color:var(--tx3)}
+.tvd-teach{background:rgba(0,122,255,.12);color:var(--ac)}
+.tvd-gap{background:rgba(255,149,0,.15);color:#A85800}
+.tvd-unavail{background:repeating-linear-gradient(45deg,#F5F5F7 0,#F5F5F7 4px,#E8E8ED 4px,#E8E8ED 8px);color:var(--tx3)}
+.tvd-cflt{background:rgba(255,59,48,.12);color:#FF3B30}
+.tvd-stat{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--rm);
+  background:var(--bg);border:var(--bs);font-size:12px}
+.tvd-stat-val{font-weight:700;font-size:15px}
+
+/* ── COGNITIVE LOAD ── */
+.cog-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.cog-chip{padding:2px 7px;border-radius:5px;font-size:10px;font-weight:600}
+.cog-ok{background:rgba(52,199,89,.1);color:#1A7835;border:1px solid rgba(52,199,89,.2)}
+.cog-warn{background:rgba(255,149,0,.15);color:#A85800;border:1px solid rgba(255,149,0,.3)}
+.cog-bad{background:rgba(255,59,48,.1);color:#CC0000;border:1px solid rgba(255,59,48,.2)}
+
+/* ── CONFLICT WARN IN MODAL ── */
+.conflict-warn{background:rgba(255,149,0,.12);border:1px solid rgba(255,149,0,.4);border-radius:var(--rs);
+  padding:8px 12px;font-size:12px;color:#A85800;margin-bottom:12px;display:none}
+.conflict-warn.show{display:block}
+
+/* ── AUTO-SCHEDULE BANK ── */
+.bank-row{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;padding:8px 10px;
+  border:var(--bs);border-radius:10px;background:var(--bg)}
+.bank-line{display:flex;gap:6px;align-items:center}
+.bank-in{font-family:inherit;font-size:13px;padding:6px 8px;border:var(--bs);
+  border-radius:8px;background:var(--sf);color:var(--tx);outline:none;box-sizing:border-box}
+.bank-in:focus{border-color:var(--ac)}
+.bank-subj{flex:1;min-width:0}.bank-tv{flex:1;min-width:0}
+.bank-cat{flex:1;min-width:0}.bank-num{width:60px;text-align:center;flex-shrink:0}
+.bank-numlbl{font-size:11px;color:var(--tx3);flex-shrink:0}
+.bank-del{width:30px;height:30px;flex-shrink:0;border:none;background:rgba(255,59,48,.1);
+  color:#FF3B30;border-radius:8px;cursor:pointer;font-size:17px;line-height:1}
+.bank-del:hover{background:rgba(255,59,48,.2)}
+.bank-sum{margin-top:12px;padding-top:10px;border-top:var(--b);font-size:13px;color:var(--tx2)}
+
+/* ── ĐỐI CHIẾU CHUẨN BỘ GD ── */
+.moet-box{padding:6px 0 4px}
+.moet-row{padding:7px 9px;border-radius:8px;margin-bottom:3px}
+.moet-row.short{background:rgba(255,149,0,.10)}
+.moet-l1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.moet-name{color:var(--tx);font-size:12.5px;font-weight:500;line-height:1.3}
+.moet-l2{display:flex;align-items:center;gap:16px;margin-top:4px;font-size:11px;color:var(--tx2)}
+.moet-l2 strong{color:var(--tx)}
+.moet-need{width:44px;text-align:center;font-family:inherit;font-size:12px;padding:2px 4px;
+  border:var(--bs);border-radius:6px;background:var(--sf);color:var(--tx)}
+.moet-stat{flex-shrink:0;font-weight:700;font-size:11px;padding:1px 8px;border-radius:8px;text-align:center}
+.moet-stat.ok{background:rgba(52,199,89,.12);color:#1A7835}
+.moet-stat.bad{background:rgba(255,59,48,.12);color:#FF3B30}
+.moet-foot{font-size:11px;color:var(--tx3);margin-top:6px;line-height:1.5;padding:0 8px}
+
+/* ── LỊCH THỬ (SANDBOX) ── */
+.ws-btn{font-size:12px;font-weight:600;padding:6px 12px;border-radius:10px;cursor:pointer;
+  border:var(--bs);background:var(--sf);color:#0F6E56;font-family:inherit;white-space:nowrap}
+.ws-btn:hover{background:#E1F5EE;border-color:#5DCAA5}
+.sb-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  margin-top:10px;padding:8px 14px;border-radius:10px;font-size:12px;
+  background:repeating-linear-gradient(-45deg,#E1F5EE,#E1F5EE 10px,#D8F1E8 10px,#D8F1E8 20px);
+  color:#085041;border:1px solid #5DCAA5}
+.sb-code{font-family:monospace;font-weight:700;letter-spacing:1px;background:#fff;color:#0F6E56;
+  border:1px solid #9FE1CB;border-radius:6px;padding:1px 8px;cursor:pointer}
+.sb-code:hover{background:#C7EEE0}
+.sb-exit{font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;cursor:pointer;
+  border:1px solid #5DCAA5;background:#fff;color:#085041;font-family:inherit;white-space:nowrap}
+.sb-exit:hover{background:#C7EEE0}
+
+/* ── CLB CHIỀU ── */
+.clb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.clb-card{background:var(--bg);border-radius:12px;padding:14px}
+.clb-nm{font-size:14px;font-weight:600;color:var(--tx)}
+.clb-gv{font-size:12px;color:var(--tx2);margin:3px 0 0}
+.clb-bar{height:7px;border-radius:6px;background:var(--sf2);overflow:hidden;margin:9px 0 7px}
+.clb-bar>i{display:block;height:100%;border-radius:6px}
+.clb-row2{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--tx2)}
+.clb-badge{font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600}
+.clb-li{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:var(--b);font-size:13px}
+.clb-li:last-child{border-bottom:none}
+.clb-li-nm{flex:1;font-weight:500;color:var(--tx)}
+.clb-li-gv{color:var(--tx2);font-size:12px}
+.clb-li-ct{font-weight:600;color:var(--tx)}
+.clb-classrow{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12px}
+.clb-classrow .cn{width:48px;color:var(--tx2);font-weight:600}
+.clb-classrow .cnr{width:150px;text-align:right;color:var(--tx2)}
+.clb-stack{flex:1;height:16px;border-radius:5px;overflow:hidden;display:flex;background:var(--sf2)}
+.clb-stack>i{height:100%}
+.clb-alert{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;padding:9px 12px;border-radius:var(--rm);margin-bottom:8px}
+.clb-alert.bad{background:rgba(255,59,48,.1);color:#CC0000}
+.clb-alert.ok{background:rgba(52,199,89,.1);color:#1A7835}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex-shrink:0}
+.clb-cat-head{display:flex;gap:8px;padding:0 4px 6px;font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase}
+.clb-cat-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;padding-left:7px}
+.clb-cat-row2{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;padding:8px 10px;border:var(--bs);border-radius:10px;background:var(--bg)}
+.clb-cat-line{display:flex;gap:6px;align-items:center}
+.clb-in{font-family:inherit;font-size:13px;padding:6px 8px;border:var(--bs);border-radius:8px;background:var(--sf);color:var(--tx);box-sizing:border-box}
+.clb-in:disabled{opacity:.45}
+.clb-del{width:30px;height:30px;flex-shrink:0;border:none;background:rgba(255,59,48,.1);color:#FF3B30;border-radius:8px;cursor:pointer;font-size:17px}
+.clb-del:hover{background:rgba(255,59,48,.2)}
+
+/* ── CLOUD STATUS PILL ── */
+.cloud-pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;cursor:default;white-space:nowrap}
+.cloud-pill.online{background:rgba(52,199,89,.12);color:#1A7835}
+.cloud-pill.syncing{background:rgba(255,149,0,.14);color:#A85800}
+.cloud-pill.off{background:rgba(142,142,147,.14);color:var(--tx2)}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-icon">🌿</div>
+      Xanh Tuệ Đức
+    </div>
+    <div class="week-sel" onclick="openWeekModal()">
+      <span id="weekLabel">Tuần 38 · 04/05/2026</span>
+      <span style="color:var(--tx3)">▾</span>
+    </div>
+    <div class="flex1"></div>
+    <div class="seg">
+      <button class="seg-btn on" onclick="setLv('tieu-hoc')">Tiểu học</button>
+      <button class="seg-btn" onclick="setLv('thcs')">THCS</button>
+      <button class="seg-btn" onclick="setLv('thpt')">THPT</button>
+    </div>
+    <span id="conflictWrap" style="display:none;align-items:center;gap:5px;font-size:11px;color:#FF3B30;cursor:pointer"
+      onclick="setView('tv')"
+      data-tip="Có giáo viên đang được xếp dạy 2 lớp khác nhau cùng một tiết. Nhấn để xem chi tiết.">
+      <span class="cbadge" id="conflictCount">0</span> xung đột
+    </span>
+    <span id="cloudStatus" class="cloud-pill off" data-tip="Trạng thái đồng bộ với máy chủ. Mọi người mở cùng link sẽ thấy cùng dữ liệu.">● Ngoại tuyến</span>
+    <button class="ws-btn" id="wsBtn" onclick="onWsBtn()" data-tip="Tạo/mở bản lịch THỬ — tách biệt, không ảnh hưởng lịch chính.">🧪 Lịch thử</button>
+    <button class="edit-toggle" id="editToggle" onclick="toggleEdit()">🔒 Nhập mật mã để sửa</button>
+  </div>
+  <div id="sbBanner" class="sb-banner" style="display:none">
+    <span>🧪 Đang ở <strong>LỊCH THỬ</strong>: <span id="sbBannerName"></span> · mã
+      <button class="sb-code" onclick="copySbCode()" data-tip="Bấm để chép mã chia sẻ"><span id="sbBannerCode"></span> ⧉</button>
+      — bản nháp, không ảnh hưởng lịch chính</span>
+    <button class="sb-exit" onclick="exitSandbox()">⬅ Về lịch chính</button>
+  </div>
+</header>
+
+<div class="page">
+  <div class="toolbar">
+    <div class="pills" id="pills"></div>
+    <div class="vtabs">
+      <button class="vtab on" onclick="setView('tkb')">Thời khóa biểu</button>
+      <button class="vtab" onclick="setView('ana')">Phân tích</button>
+      <button class="vtab" onclick="setView('tv')">Giáo viên</button>
+      <button class="vtab" id="tabHs" onclick="setView('hs')">👤 Học sinh</button>
+      <button class="vtab" id="tabClb" onclick="setView('clb')">🎯 CLB chiều</button>
+      <button class="vtab" id="tabCfg" onclick="setView('cfg')">Cài đặt</button>
+    </div>
+  </div>
+
+  <!-- TKB VIEW -->
+  <div id="vTkb">
+    <div class="maingrid">
+      <div class="tkb-wrap"><div class="tbl-scroll"><table id="tbl"></table></div></div>
+      <div class="sidebar" id="sb"></div>
+    </div>
+  </div>
+
+  <!-- ANALYSIS VIEW -->
+  <div id="vAna" class="gone"><div class="ana-grid" id="anaGrid"></div></div>
+
+  <!-- TEACHERS VIEW -->
+  <div id="vTv" class="gone">
+    <div class="tv-table-wrap"><table class="tv-table" id="tvTable"></table></div>
+  </div>
+
+  <!-- STUDENTS VIEW -->
+  <div id="vHs" class="gone">
+    <div class="hs-wrap">
+      <div class="hs-list-col">
+        <div class="card">
+          <div class="card-h" style="display:flex;align-items:center;justify-content:space-between">
+            <span id="hsTitle">Lớp — · 0 học sinh</span>
+            <button class="btn btn-primary" style="font-size:12px;padding:4px 12px" onclick="showHsAdd()">+ Thêm</button>
+          </div>
+          <div id="hsAddRow" class="gone" style="display:flex;gap:6px;padding:8px 0">
+            <input class="form-input" id="hsNameInput" placeholder="Họ và tên học sinh..." style="flex:1;font-size:13px"
+              onkeydown="if(event.key==='Enter')submitHsAdd()">
+            <button class="btn btn-primary" style="font-size:12px;padding:4px 10px" onclick="submitHsAdd()">Lưu</button>
+            <button class="btn btn-secondary" style="font-size:12px;padding:4px 10px" onclick="hideHsAdd()">Hủy</button>
+          </div>
+          <div id="hsList"></div>
+        </div>
+      </div>
+      <div class="hs-assign-col">
+        <div class="card">
+          <div class="card-h">Phân công tiết tự chọn</div>
+          <div id="hsAssignGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLB CHIỀU VIEW -->
+  <div id="vClb" class="gone"><div id="vClbBody"></div></div>
+
+  <!-- SETTINGS VIEW -->
+  <div id="vCfg" class="gone">
+    <div class="settings-grid">
+      <div class="card">
+        <div class="card-h">Danh sách giáo viên</div>
+        <div id="teacherList"></div>
+        <div class="add-row">
+          <input id="newTeacher" placeholder="Tên giáo viên..." onkeydown="if(event.key==='Enter')addTeacher()">
+          <button class="btn-add" onclick="addTeacher()">+ Thêm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TEACHER DETAIL MODAL ── -->
+<div class="modal-bg" id="tvDetailModal">
+  <div class="modal" style="width:720px;max-width:96vw;max-height:90vh;overflow-y:auto">
+    <div class="modal-h">
+      <span>Lịch dạy: <span id="tvDetailName" style="color:var(--ac)"></span></span>
+      <button class="modal-close" onclick="closeTvDetail()">×</button>
+    </div>
+    <div class="tvd-wrap"><div id="tvDetailGrid"></div></div>
+    <div id="tvDetailStats" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:var(--bs)"></div>
+  </div>
+</div>
+
+<!-- ── AVAILABILITY MODAL ── -->
+<div class="modal-bg" id="availModal">
+  <div class="modal" style="width:480px;max-width:96vw">
+    <div class="modal-h">
+      <span>Lịch GV: <span id="availTeacherName" style="color:var(--ac)"></span></span>
+      <button class="modal-close" onclick="closeAvailModal()">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:14px">Click ô để đánh dấu khung giờ GV <strong>không thể dạy</strong>. Dùng cho GV thỉnh giảng có lịch cố định.</p>
+    <div id="availGrid"></div>
+    <div style="margin-top:16px"><button class="btn btn-primary" style="width:100%" onclick="closeAvailModal()">Xong</button></div>
+  </div>
+</div>
+
+<!-- ── STUDENT TKB MODAL ── -->
+<div class="modal-bg" id="stuTKBModal">
+  <div class="modal" style="width:860px;max-width:98vw;max-height:92vh;overflow-y:auto">
+    <div class="modal-h no-print">
+      <span>📋 TKB cá nhân: <strong id="stuTKBName" style="color:var(--ac)"></strong>
+        <span id="stuTKBCls" style="font-size:13px;color:var(--tx2);font-weight:400;margin-left:6px"></span>
+      </span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-secondary" onclick="window.print()" style="font-size:13px">🖨 In TKB</button>
+        <button class="modal-close" onclick="closeStuTKB()">×</button>
+      </div>
+    </div>
+    <div id="stuTKBContent" style="padding:4px 0"></div>
+  </div>
+</div>
+
+<!-- ── CELL EDIT MODAL ── -->
+<div class="modal-bg" id="cellModal">
+  <div class="modal">
+    <div class="modal-h">
+      <span id="cellModalTitle">Chỉnh sửa ô</span>
+      <button class="modal-close" onclick="closeCellModal()">×</button>
+    </div>
+    <div class="conflict-warn" id="conflictWarnMsg"></div>
+    <div class="form-row">
+      <div class="form-label">Môn học</div>
+      <input class="form-input" id="mSubject" list="subjectList" placeholder="Nhập tên môn...">
+      <datalist id="subjectList"></datalist>
+    </div>
+    <div class="form-row">
+      <div class="form-label">Giáo viên</div>
+      <input class="form-input" id="mTeacher" list="teacherList2" placeholder="Nhập tên giáo viên...">
+      <datalist id="teacherList2"></datalist>
+    </div>
+    <div class="form-row">
+      <div class="form-label">Nhóm</div>
+      <select class="form-select" id="mCat" onchange="updateCatPreview()">
+        <option value="bo-gd">Bộ GD bắt buộc</option>
+        <option value="hdtn">HĐTN & Sinh hoạt</option>
+        <option value="tang-cuong">Tăng cường & Ôn thi</option>
+        <option value="ky-nang">Kỹ năng & Thể chất</option>
+        <option value="sang-tao">Sáng tạo & STEAM</option>
+        <option value="ca-nhan-hoa">👤 Tiết tự chọn cá nhân hóa</option>
+      </select>
+      <div class="cat-preview" id="catPreview"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="saveCellEdit()">Lưu</button>
+      <button class="btn btn-danger" onclick="clearCell()">Xóa ô</button>
+      <button class="btn btn-sec" onclick="closeCellModal()">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SANDBOX MODAL (Lịch thử) ── -->
+<div class="modal-bg" id="sbModal">
+  <div class="modal" style="width:520px;max-width:96vw">
+    <div class="modal-h">
+      <span>🧪 Lịch thử nghiệm</span>
+      <button class="modal-close" onclick="closeSbModal()">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:14px">
+      Tạo một bản lịch <strong>nháp riêng</strong> để thử (vd 1 bộ môn, 1 khóa hè) — tách hẳn lịch chính,
+      ai có mã đều mở & sửa được. Dùng để làm quen cách vận hành.</p>
+
+    <div style="border:var(--bs);border-radius:var(--rm);padding:14px;margin-bottom:14px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px">➕ Tạo lịch thử mới</div>
+      <div class="form-row">
+        <div class="form-label">Tên lịch thử</div>
+        <input class="form-input" id="sbName" placeholder="VD: Thử Tiếng Anh, Khóa hè 2026">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Các nhóm/lớp (cách nhau bởi dấu phẩy)</div>
+        <input class="form-input" id="sbCols" placeholder="VD: Nhóm A, Nhóm B, Lớp 6, Lớp 7">
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="createSandbox()">Tạo & bắt đầu thử</button>
+    </div>
+
+    <div style="border:var(--bs);border-radius:var(--rm);padding:14px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px">🔑 Mở lịch thử có sẵn (bằng mã)</div>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="sbJoinCode" placeholder="Nhập mã (vd ABC23)" style="flex:1;text-transform:uppercase">
+        <button class="btn btn-sec" style="white-space:nowrap" onclick="joinSandbox()">Mở</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AUTO-SCHEDULE MODAL ── -->
+<div class="modal-bg" id="autoModal">
+  <div class="modal" style="width:680px;max-width:96vw;max-height:92vh;overflow-y:auto">
+    <div class="modal-h">
+      <span>⚡ Tự động xếp lịch — Lớp <span id="autoClsName" style="color:var(--ac)"></span></span>
+      <button class="modal-close" onclick="closeAutoModal()">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:12px">
+      Khai báo <strong>số tiết/tuần</strong> cho mỗi môn. App tự xếp vào ô trống theo thứ tự ưu tiên nhóm
+      (Bộ GD trước → Sáng tạo sau), tránh trùng giáo viên và rải đều các ngày.
+      Ô <strong>Chào cờ / Sinh hoạt lớp</strong> được giữ cố định.
+    </p>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="btn btn-primary" style="font-size:12px;padding:6px 12px" onclick="autoFillBankFromMOET()">📘 Theo chuẩn Bộ GD</button>
+      <button class="btn btn-sec" style="font-size:12px;padding:6px 12px" onclick="autoFillBankFromTKB()">↻ Từ TKB hiện tại</button>
+      <button class="btn btn-sec" style="font-size:12px;padding:6px 12px" onclick="addBankRow()">+ Thêm môn</button>
+    </div>
+    <div id="bankTable"></div>
+    <div id="autoReport" style="display:none;margin-top:12px"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="runAuto('fill')"
+        data-tip="Giữ nguyên các tiết đã có, chỉ điền môn còn thiếu vào ô trống.">Điền chỗ trống</button>
+      <button class="btn" style="background:#FF9500;color:#fff" onclick="runAuto('rebuild')"
+        data-tip="Xóa hết tiết (trừ Chào cờ / SHL) rồi xếp lại từ đầu theo ngân hàng.">Xếp lại toàn bộ</button>
+      <button class="btn btn-sec" onclick="closeAutoModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── WEEK MODAL ── -->
+<div class="modal-bg" id="weekModal">
+  <div class="modal">
+    <div class="modal-h">
+      <span>Quản lý tuần học</span>
+      <button class="modal-close" onclick="closeWeekModal()">×</button>
+    </div>
+    <div id="weekList"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <input class="form-input" id="newWeekName" placeholder="VD: Tuần 39 · 11/05/2026" style="flex:1">
+      <button class="btn btn-primary" style="flex:0;white-space:nowrap" onclick="addWeek()">+ Tuần mới</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="subjectSuggestions"></datalist>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// DEFAULT DATA
+// ─────────────────────────────────────────────────────────────
+const DEFAULT_COLORS={
+  'bo-gd':      {bg:'#E3EFFF',tx:'#0051A8',dot:'#007AFF',lbl:'Bộ GD bắt buộc'},
+  'hdtn':       {bg:'#EEEDFF',tx:'#3B38A8',dot:'#5E5CE6',lbl:'HĐTN & Sinh hoạt'},
+  'tang-cuong': {bg:'#FFF3E0',tx:'#A85800',dot:'#FF9500',lbl:'Tăng cường & Ôn thi'},
+  'ky-nang':    {bg:'#E5F8EC',tx:'#1A7835',dot:'#30D158',lbl:'Kỹ năng & Thể chất'},
+  'sang-tao':   {bg:'#FFE8EF',tx:'#AA0E2F',dot:'#FF2D55',lbl:'Sáng tạo & STEAM'},
+  'ca-nhan-hoa':{bg:'#E0F9F7',tx:'#005E57',dot:'#00C7BE',lbl:'Tiết tự chọn cá nhân hóa'},
+};
+
+// Các môn học có thể chọn trong tiết cá nhân hóa
+const CA_NHAN_HOA_SUBJECTS=[
+  'Bồi dưỡng Tiếng Anh','Bồi dưỡng Toán',
+  'CLB Võ thuật','CLB Truyền thông','CLB Bóng đá','CLB Bơi',
+];
+
+const INIT_TKB={
+  '1A1':{morning:[['HĐTNHN - SHDC - Hoa','Tiếng việt - Hoa','Tiếng việt - Hoa','Toán - Hoa','Tin học - P.Linh'],['GDTC (WP) - Hoàng','Tiếng việt - Hoa','Tiếng việt - Hoa','BD Tiếng Anh - Lan','BD Tiếng Anh - Lan'],['Tiếng việt - Hoa','Tiếng việt - Hoa','Toán - Hoa','BD Tiếng Anh - Lan','BD Tiếng Anh - Lan'],['Toán - Hoa','Tiếng việt - Hoa','Tiếng việt - Hoa','TNXH - Hoa','Âm nhạc - Mạnh Hùng'],['GDTC - Hoàng','Tiếng việt - Hoa','Tiếng việt - Hoa','Đạo Đức - Quỳnh','Đọc sách - Quỳnh']],afternoon:[['TNXH - Hoa','Võ thuật - Hưng','BD Tiếng Anh - Lan','BD Tiếng Anh - Lan'],['HĐTNHN - CĐ - Như','KNS - Như','Mĩ thuật - Hà','Steam - Hà'],['Tiếng việt - Hoa','Tiếng việt - Hoa','BD Toán - Hoa','LCĐ - Lê Hằng'],['BD Toán - Hoa','BD Tiếng việt - Hoa','BD Tiếng Anh - Lan','BD Tiếng Anh - Lan'],['BD Tiếng Anh - Lan','BD Tiếng Anh - Lan','BD Tiếng việt - Hoa','HĐTNHN - SHL - Hoa']]},
+  '2A1':{morning:[['HĐTNHN - SHDC - P.Hiền','TOÁN - P.Hiền','Tiếng việt - P.Hiền','Tiếng việt - P.Hiền','Tin học - P.Linh'],['GDTC (WP) - Hoàng','Tiếng việt - P.Hiền','Tiếng việt - P.Hiền','TOÁN - P.Hiền','TNXH - P.Hiền'],['Tiếng việt - P.Hiền','Tiếng việt - P.Hiền','TOÁN - P.Hiền','Mĩ thuật - Hà','Steam - Hà'],['Tiếng việt - P.Hiền','Tiếng việt - P.Hiền','TOÁN - P.Hiền','TOÁN - P.Hiền','Âm nhạc - Mạnh Hùng'],['GDTC - Hoàng','Tiếng việt - P.Hiền','Tiếng việt - P.Hiền','Đạo Đức - Quỳnh','Đọc sách - Quỳnh']],afternoon:[['TNXH - P.Hiền','Võ thuật - Hưng','BD Tiếng Anh - H.An','BD Tiếng Anh - H.An'],['HĐTNHN - CĐ - Như','KNS - Như','BD Tiếng Anh - H.An','BD Tiếng Anh - H.An'],['BD Tiếng việt - P.Hiền','BD Tiếng việt - P.Hiền','BD Tiếng Anh - H.An','BD Tiếng Anh - H.An'],['LCĐ - Lê Hằng','BD Toán - P.Hiền','BD Tiếng Anh - H.An','BD Tiếng Anh - H.An'],['BD Tiếng Anh - H.An','BD Tiếng Anh - H.An','BD Toán - P.Hiền','HĐTNHN - SHL - P.Hiền']]},
+  '3A1':{morning:[['HĐTNHN - SHDC - H.An','Tiếng Anh - H.An','Tiếng Anh - H.An','HĐTNHN - CĐ - Như','KNS - Như'],['Tiếng việt - Huệ','Tiếng việt - Huệ','GDTC (WP) - Hoàng','TOÁN - Huệ','TOÁN - Huệ'],['Tiếng Anh - H.An','Tiếng Anh - H.An','Tiếng việt - Huệ','Tiếng việt - Huệ','TNXH - L.T.Linh'],['GDTC - Hoàng','Đạo Đức - Quỳnh','TOÁN - Huệ','Tiếng việt - Huệ','Công nghệ - Hà'],['Tiếng việt - Huệ','TOÁN - Huệ','Âm nhạc - Mạnh Hùng','BD Tiếng Anh - H.An','BD Tiếng Anh - H.An']],afternoon:[['Võ thuật - Hưng','Tiếng việt - Huệ','Tiếng việt - Huệ','TOÁN - Huệ'],['BD Tiếng Anh - H.An','BD Tiếng Anh - H.An','TNXH - L.T.Linh','Đọc sách - Quỳnh'],['BD Tiếng việt - Huệ','BD Toán - L.T.Linh','Steam - Hà','Mĩ thuật - Hà'],['BD Tiếng việt - Huệ','BD Tiếng Anh - H.An','BD Tiếng Anh - H.An','BD Tiếng Anh - H.An'],['LCĐ - Lê Hằng','BD Toán - L.T.Linh','BD Tiếng việt - Huệ','HĐTNHN - SHL - H.An']]},
+  '4A1':{morning:[['HĐTNHN - SHDC - L.Quỳnh','TOÁN - Hằng','GDTC - Hoàng','HĐTNHN - CĐ - Như','KNS - Như'],['Tiếng việt - L.Quỳnh','Tiếng việt - L.Quỳnh','Tiếng việt - L.Quỳnh','LSĐL - Lê Hằng','Khoa học - L.T.Linh'],['Tiếng Anh - Lan','Tiếng việt - L.Quỳnh','Khoa học - L.T.Linh','TOÁN - Hằng','TOÁN - Hằng'],['Tiếng Anh - Lan','Tiếng Anh - Lan','TOÁN - Hằng','LSĐL - Lê Hằng','BD Tiếng Anh - Lan'],['LSĐL - Lê Hằng','BD Tiếng Anh - Lan','BD Tiếng Anh - Lan','BD Tiếng Anh - Lan','BD Tiếng Anh - Lan']],afternoon:[['Tiếng Anh - Lan','Tiếng Anh - Lan','Võ thuật - Hưng','Công nghệ - Hà'],['BD Tiếng Anh - Lan','BD Tiếng Anh - Lan','Đọc sách - Quỳnh','GDTC (WP) - Hoàng'],['Âm nhạc - Mạnh Hùng','Đạo Đức - Quỳnh','BD Tiếng Anh - Lan','BD Tiếng Anh - Lan'],['BD Tiếng việt - L.Quỳnh','BD Toán - Hằng','Steam - Hà','Mĩ thuật - Hà'],['LCĐ - Lê Hằng','BD Toán - Hằng','BD Tiếng việt - L.Quỳnh','HĐTNHN - SHL - L.Quỳnh']]},
+  '5A1':{morning:[['HĐTNHN - SHDC - Hằng','Tiếng Anh - P.Thảo','Tiếng Anh - P.Thảo','TOÁN - Hằng','Tiếng việt - L.Hiền'],['TOÁN - Hằng','GDTC (WP) - Hoàng','Tiếng Anh - P.Thảo','Tiếng việt - L.Hiền','Mĩ thuật - Hà'],['TOÁN - Hằng','LSĐL - Lê Hằng','LSĐL - Lê Hằng','HĐTNHN - CĐ - Như','KNS - Như'],['TOÁN - Hằng','Tiếng việt - L.Hiền','Tiếng việt - L.Hiền','BD Tiếng Anh - P.Thảo','BD Tiếng Anh - P.Thảo'],['LSĐL - Lê Hằng','Âm nhạc - Mạnh Hùng','Steam - Hà','BD Tiếng Anh - P.Thảo','BD Tiếng Anh - P.Thảo']],afternoon:[['Tiếng việt - L.Hiền','Tiếng việt - L.Hiền','Công nghệ - Hà','Võ thuật - Hưng'],['Khoa học - L.T.Linh','Tiếng việt - L.Hiền','Tiếng việt - L.Hiền','Tin học - P.Linh'],['Đạo Đức - Quỳnh','BD Toán - Hằng','BD Tiếng Anh - P.Thảo','BD Tiếng Anh - P.Thảo'],['BD Toán - Hằng','LCĐ - Lê Hằng','Khoa học - L.T.Linh','GDTC - Hoàng'],['BD Tiếng việt - L.Hiền','BD Tiếng việt - L.Hiền','Đọc sách - Quỳnh','HĐTNHN - SHL - Hằng']]},
+  '6A1':{morning:[['HĐTNHN - SHDC - L.Hiền','Ngữ văn - L.Hiền','Ngữ văn - L.Hiền','TOÁN - T.Ngân','TOÁN - T.Ngân'],['Tiếng Anh - P.Thảo','KHTN_Sinh - Lụa','Ngữ văn - L.Hiền','TOÁN - T.Ngân','TOÁN - T.Ngân'],['Ngữ văn - L.Hiền','Ngữ văn - L.Hiền','Tiếng Anh - P.Thảo','Tiếng Anh - P.Thảo','GDTC (WP) - Hoàng'],['KHTN_Hoá - P. Thoa','Tin học - P.Linh','TOÁN - T.Ngân','HĐTNHN - CĐ - Như','GDCD - Tiến Hùng'],['TOÁN - T.Ngân','GDĐP - Tiến Hùng','GDĐP - Tiến Hùng','GDCD - Tiến Hùng','GDTC (WP) - Hoàng']],afternoon:[['KHTN_Sinh - Lụa','Ngữ văn - L.Hiền','Ngữ văn - L.Hiền','LSĐL_Sử - Nghiệp'],['BD Tiếng Anh - P.Thảo','BD Tiếng Anh - P.Thảo','Tin học - P.Linh','BD Toán - T.Ngân'],['BD Ngữ văn - L.Hiền','Võ thuật - Hưng','LSĐL_Sử - Nghiệp','BD Toán - T.Ngân'],['BD Tiếng Anh - P.Thảo','BD Tiếng Anh - P.Thảo','GDTC - Hoàng','BD Ngữ văn - L.Hiền'],['Âm nhạc - Mạnh Hùng','BD Tiếng Anh - P.Thảo','BD Tiếng Anh - P.Thảo','HĐTNHN - SHL - L.Hiền']]},
+  '7A1':{morning:[['HĐTNHN - SHDC - P.Linh','GDTC (WP) - Hoàng','KHTN_Sinh - Lụa','KHTN_Hoá - P. Thoa','Ngữ văn - L.Hiền'],['Ngữ văn - L.Hiền','Ngữ văn - L.Hiền','TOÁN - T.Ngân','TOÁN - T.Ngân','GDCD - Tiến Hùng'],['Tiếng Anh - P.Thuý','Tiếng Anh - P.Thuý','Tiếng Anh - P.Thuý','TOÁN - T.Ngân','Tin học - P.Linh'],['GDTC - Hoàng','GDTC - Hoàng','KHTN_Sinh - Lụa','BD Tiếng Anh - P.Thuý','HĐTNHN - CĐ - Như'],['GDĐP - Tiến Hùng','GDĐP - Tiến Hùng','Ngữ văn - L.Hiền','BD Tiếng Anh - P.Thuý','Ngữ văn - L.Hiền']],afternoon:[['Âm nhạc - Mạnh Hùng','LSĐL_Sử - Nghiệp','Võ thuật - Hưng','LSĐL_Sử - Nghiệp'],['Steam - Hà','BD Ngữ văn - L.Hiền','BD Tiếng Anh - P.Thuý','CLB Tiếng anh - P.Thuý'],['BD Ngữ văn - L.Hiền','BD Toán - T.Ngân','BD Tiếng Anh - P.Thuý','BD Toán - T.Ngân'],['Công nghệ - P.Linh','LSĐL_Địa - Mai','BD Tiếng Anh - P.Thuý','CLB Tiếng anh - P.Thuý'],['BD Tiếng Anh - P.Thuý','BD Tiếng Anh - P.Thuý','BD Toán - T.Ngân','HĐTNHN - SHL - P.Linh']]},
+  '8A1':{morning:[['HĐTNHN - SHDC - P.Thuý','KHTN_Hoá - P. Thoa','Tiếng Anh - P.Thuý','Công nghệ - Yên','GDTC (WP) - Hoàng'],['Công nghệ - Yên','KHTN_Hoá - P. Thoa','Tiếng Anh - P.Thuý','Ngữ văn - Phương','KHTN_Sinh - Lụa'],['Tiếng Anh - P.Thuý','TOÁN - T.Ngân','TOÁN - T.Ngân','KHTN_Lý - Yên','Ngữ văn - Phương'],['KHTN_Lý - Yên','HĐTNHN - CĐ - Như','TOÁN - T.Ngân','GDTC (WP) - Hoàng','BD Tiếng Anh - P.Thuý'],['Ngữ văn - Phương','GDCD - Vũ','Tin học - P.Linh','GDĐP - Vũ','GDTC - Hoàng']],afternoon:[['LSĐL_Sử - Nghiệp','GDTC (WP) - Hoàng','Ngữ văn - Phương','Ngữ văn - Phương'],['BD Toán - T.Ngân','BD Ngữ văn - Phương','Võ thuật - Hưng','BD Tiếng Anh - P.Thuý'],['LSĐL_Sử - Nghiệp','LSĐL_Địa - Mai','Võ thuật - Hưng','BD Tiếng Anh - P.Thuý'],['Âm nhạc - Mạnh Hùng','BD Ngữ văn - Phương','LSĐL_Địa - Mai','Tin học - P.Linh'],['Mĩ thuật - Hà','Steam - Hà','GDTC - Hoàng','HĐTNHN - SHL - P.Thuý']]},
+  '9A1':{morning:[['HĐTNHN - SHDC - Lụa','TOÁN - Tuyên','Ngữ văn - Phương','GDCD - Vũ','GDTC (WP) - Hoàng'],['TOÁN - Tuyên','TOÁN - Tuyên','Tiếng Anh - H.Thuý','KHTN_Lý - Yên','Ngữ văn - Phương'],['Ngữ văn - Phương','Ngữ văn - Phương','Tiếng Anh - H.Thuý','TOÁN - Tuyên','TOÁN - Tuyên'],['GDTC (WP) - Hoàng','Tin học - P.Linh','Ngữ văn - Phương','TOÁN - Tuyên','HĐTNHN - CĐ - Như'],['KHTN_Hoá - P. Thoa','GDĐP - Vũ','KHTN_Sinh - Lụa','GDĐP - Vũ','HĐTNHN - CĐ - Như']],afternoon:[['KHTN_Hoá - P. Thoa','KHTN_Sinh - Lụa','LSĐL_Sử - Nghiệp','GDTC (WP) - Hoàng'],['BD Tiếng Anh - H.Thuý','BD Tiếng Anh - H.Thuý','BD Toán - Tuyên','Steam - Hà'],['BD Toán - Tuyên','BD Tiếng Anh - H.Thuý','LSĐL_Sử - Nghiệp','BD Ngữ văn - Phương'],['LSĐL_Địa - Mai','KHTN_Hoá - P. Thoa','BD Ngữ văn - Phương','LSĐL_Địa - Mai'],['GDTC - Hoàng','BD Tiếng Anh - H.Thuý','BD Toán - Tuyên','HĐTNHN - SHL - Lụa']]},
+  '10A1':{morning:[['HĐTNHN - SHDC - Phương','Tiếng Anh - H.Thuý','Tiếng Anh - H.Thuý','TOÁN - Tuyên','Hoá học - P. Thoa'],['GDTC - Hưng','Sinh - Lụa','Ngữ văn - Phương','Ngữ văn - Phương','Toán CĐ - Tuyên'],['HĐTNHN - CĐ - Nguyên','BD Tiếng Anh - H.Thuý','Sinh CĐ - Lụa','TOÁN - Tuyên','Lịch sử - Xuân'],['Ngữ văn - Phương','Tiếng Anh - H.Thuý','Sinh - Lụa','Lịch sử - Xuân','GDKTPL - Xuân'],['GDTC - Hoàng','GDQP - Đồng','Hoá học - P. Thoa','Lịch sử - Xuân','Ngữ văn - Phương']],afternoon:[['','HĐTNHN - CĐ - Nguyên','',''],['','BD Ngữ văn - Phương','TOÁN - Tuyên','TOÁN - Tuyên'],['','','Võ thuật - Hưng','Võ thuật - Hưng'],['BD Toán - Tuyên','BD Toán - Tuyên','Địa CĐ - Kim Thoa','GDKTPL - Xuân'],['BD Ngữ văn - Phương','BD Ngữ văn - Phương','GDTC - Hưng','HĐTNHN - SHL - Phương']]},
+  '11A1':{morning:[['HĐTNHN - SHDC - Dương','TOÁN - Minh','TOÁN - Minh','GDQP - Đồng','TOÁN - Minh'],['Tiếng Anh - Dương','Tiếng Anh - Dương','Tiếng Anh - Dương','GDQP - Đồng','GDKTPL - Xuân'],['HĐTNHN - CĐ - Nguyên','Công nghệ - P. Thoa','Vật lí - Yên','Hoá học - Minh','Công nghệ - P. Thoa'],['TOÁN - Minh','Hoá học - Minh','Ngữ văn - Hương','Ngữ văn - Hương','TOÁN - Minh'],['Tiếng Anh - Dương','Tiếng Anh - Dương','GDKTPL - Xuân','GDTC - Hưng','Ngữ văn CĐ - Hương']],afternoon:[['','Công nghệ - P. Thoa','',''],['BD Tiếng Anh - Dương','Địa lí CĐ - Kim Thoa','','BD Tiếng Anh - Dương'],['Lịch sử - Xuân','Lịch sử - Xuân','Địa lí - Kim Thoa','Địa lí - Kim Thoa'],['Địa CĐ - Kim Thoa','BD Tiếng Anh - H.Thuý','BD Toán - Minh','Võ thuật - Hưng'],['BD Toán - Minh','BD Toán - Minh','BD Tiếng Anh - Dương','HĐTNHN - SHL - Dương']]},
+  '12A1':{morning:[['HĐTNHN - SHDC - Xuân','TOÁN - Phan (Ôn thi TN)','TOÁN - Phan (Ôn thi TN)','TOÁN - Phan (Ôn thi TN)','Ngữ văn - Hương (Ôn thi TN)'],['Tiếng Anh - Dương','TOÁN - Phan (Ôn thi TN)','Ngữ văn - Hương (Ôn thi TN)','TOÁN - Phan (Ôn thi TN)','Ngữ văn - Hương (Ôn thi TN)'],['Ngữ văn CĐ - Hương (Ôn thi TN)','Lịch sử - Xuân (Ôn thi TN)','Ngữ văn - Hương (Ôn thi TN)','Lịch sử - Xuân (Ôn thi TN)','TOÁN - Phan (Ôn thi TN)'],['Ngữ văn CĐ - Hương (Ôn thi TN)','Lịch sử - Xuân (Ôn thi TN)','TOÁN - Phan (Ôn thi TN)','GDQP - Đồng','TOÁN - Phan (Ôn thi TN)'],['Ngữ văn - Hương (Ôn thi TN)','Lịch sử - Xuân (Ôn thi TN)','Ngữ văn - Hương (Ôn thi TN)','GDQP - Đồng','Ngữ văn - Hương (Ôn thi TN)']],afternoon:[['','','',''],['Sinh - Lụa','Lịch sử - Xuân (Ôn thi TN)','Lịch sử - Xuân (Ôn thi TN)','Lịch sử - Xuân (Ôn thi TN)'],['Địa lí - Kim Thoa','Địa lí - Kim Thoa','Địa lí - Kim Thoa','Lịch sử - Xuân (Ôn thi TN)'],['GDKTPL - Phượng (Ôn thi TN)','BD Lịch sử - Xuân','BD Toán - Tuyên','Võ thuật - Hưng'],['GDKTPL - Phượng (Ôn thi TN)','BD Lịch sử - Xuân','BD Toán - Tuyên','HĐTNHN - SHL - Xuân']]},
+};
+
+const LEVELS={'tieu-hoc':['1A1','2A1','3A1','4A1','5A1'],'thcs':['6A1','7A1','8A1','9A1'],'thpt':['10A1','11A1','12A1']};
+const DAYS=['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6'];
+
+// ─────────────────────────────────────────────────────────────
+// STATE & PERSISTENCE
+// ─────────────────────────────────────────────────────────────
+function ls(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}}
+function lsSave(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+let colors = ls('xtd-colors') || JSON.parse(JSON.stringify(DEFAULT_COLORS));
+let weeks = ls('xtd-weeks') || {'w38':{name:'Tuần 38',date:'04/05/2026',classes:JSON.parse(JSON.stringify(INIT_TKB))}};
+let teachers = ls('xtd-teachers') || extractTeachers();
+let teacherAvail = ls('xtd-avail') || {}; // { 'Name': ['d-session-t', ...] }
+let teacherTypes = ls('xtd-types') || {}; // { 'Name': 'co-huu' | 'thinh-giang' }
+function getType(name){ return teacherTypes[name] || 'co-huu'; }
+function isThinhGiang(name){ return getType(name) === 'thinh-giang'; }
+function toggleType(name){
+  teacherTypes[name] = isThinhGiang(name) ? 'co-huu' : 'thinh-giang';
+  lsSave('xtd-types', teacherTypes);
+  renderSettings();
+}
+let studentRosters = ls('xtd-rosters') || {}; // { 'classId': [{id,name}] }
+let studentChoices = ls('xtd-choices') || {}; // { 'studentId': {'d-sess-t': 'subjectName'} }
+// Danh mục lựa chọn tiết chiều: CLB (sở thích) + Phụ đạo (bắt buộc) — có sức chứa & GV
+// Mỗi mục = 1 NHÓM: name(môn/CLB) + label(nhóm, vd "Nhóm 1") + type(clb|phudao)
+// + kind(in=trong giờ | out=CLB ngoài giờ) + cap(sức chứa) + teacher
+let clbCatalog = ls('xtd-clb') || CA_NHAN_HOA_SUBJECTS.map(n=>({
+  name:n, label:'', type:/^\s*CLB/i.test(n)?'clb':'phudao', kind:'in', cap:/^\s*CLB/i.test(n)?20:0, teacher:''
+}));
+clbCatalog.forEach(o=>{ if(o.kind==null)o.kind='in'; if(o.label==null)o.label=''; }); // vá dữ liệu cũ
+function clbFullName(o){return o.label?`${o.name} · ${o.label}`:o.name;}
+function clbFind(full){return clbCatalog.find(x=>clbFullName(x)===full)||clbCatalog.find(x=>x.name===full);}
+function clbType(full){const o=clbFind(full);return o?o.type:(/^\s*CLB/i.test(full||'')?'clb':'phudao');}
+function clbKind(full){const o=clbFind(full);return o?o.kind:'in';}
+let subjectReqs = ls('xtd-subjreqs') || {};  // { 'classId': [{subject,teacher,cat,periods}] }
+let moetStd = ls('xtd-moetstd') || {};       // { grade: [{label,periods,match:[..]}] } — chuẩn Bộ chỉnh tay
+let bankDraft = [];                          // working copy while auto modal open
+let curWeek = ls('xtd-curWeek') || 'w38';
+let curLv='tieu-hoc', curCls='1A1', curView='tkb', editMode=false;
+let editCtx=null;
+let _cfltCache=null;
+
+// ── WORKSPACE: 'official' (lịch thật) | 'sandbox' (lịch thử) ──
+let mode='official';
+let sandbox=null;     // {code,name,columns:[...],data:{col:{morning,afternoon}},teachers:[...]}
+let sbUnsub=null;     // listener firestore cho sandbox
+let sbPushTimer=null;
+function inSandbox(){return mode==='sandbox';}
+function canEditGrid(){return inSandbox() ? true : canEdit;}   // sandbox sửa lưới tự do, không cần mật mã
+
+function save(){
+  _cfltCache=null;
+  if(inSandbox()){ saveSandbox(); updateConflictBadge(); return; }
+  lsSave('xtd-colors',colors);
+  lsSave('xtd-weeks',weeks);
+  lsSave('xtd-teachers',teachers);
+  lsSave('xtd-avail',teacherAvail);
+  lsSave('xtd-types',teacherTypes);
+  lsSave('xtd-rosters',studentRosters);
+  lsSave('xtd-choices',studentChoices);
+  lsSave('xtd-subjreqs',subjectReqs);
+  lsSave('xtd-moetstd',moetStd);
+  lsSave('xtd-clb',clbCatalog);
+  lsSave('xtd-curWeek',curWeek);
+  _cfltCache=null;
+  updateConflictBadge();
+  if(canEdit) schedulePush();   // đẩy lên cloud khi người có quyền chỉnh sửa
+}
+
+function extractTeachers(){
+  const set=new Set();
+  Object.values(INIT_TKB).forEach(d=>{
+    [...d.morning,...d.afternoon].forEach(row=>row.forEach(r=>{
+      if(r&&r.trim()){const t=r.split(' - ').pop().replace(/\s*\(.*\)/,'').trim();if(t)set.add(t);}
+    }));
+  });
+  return [...set].sort();
+}
+
+function getWeekData(){return inSandbox() ? (sandbox?.data||{}) : (weeks[curWeek]?.classes||{});}
+function getClassData(){return getWeekData()[curCls]||{morning:[[],[],[],[],[]],afternoon:[[],[],[],[],[]],after:[[],[],[],[],[]]};}
+// Danh sách cột (lớp/nhóm) của workspace hiện tại
+function curColumns(){return inSandbox() ? (sandbox?.columns||[]) : (LEVELS[curLv]||[]);}
+// Lấy (tạo nếu chưa có) ô lưu dữ liệu của 1 cột để GHI
+function classStore(cls){
+  const blank=()=>({morning:[[],[],[],[],[]],afternoon:[[],[],[],[],[]],after:[[],[],[],[],[]]});
+  if(inSandbox()){ if(!sandbox.data[cls]) sandbox.data[cls]=blank(); if(!sandbox.data[cls].after)sandbox.data[cls].after=[[],[],[],[],[]]; return sandbox.data[cls]; }
+  if(!weeks[curWeek].classes[cls]) weeks[curWeek].classes[cls]=blank();
+  if(!weeks[curWeek].classes[cls].after) weeks[curWeek].classes[cls].after=[[],[],[],[],[]];
+  return weeks[curWeek].classes[cls];
+}
+
+// ── Cấu trúc ngày học theo cấp ──
+// Tiểu học: 5 sáng + 4 chiều = 9 tiết/ngày. THCS & THPT: 4 sáng + 4 chiều = 8 tiết/ngày.
+// "Ngoài giờ": 2 tiết CLB tự nguyện sau khi tan học (mọi cấp).
+const AFTER_SLOTS=2;
+function levelOf(cls){for(const l in LEVELS){if(LEVELS[l].includes(cls))return l;}return 'tieu-hoc';}
+function sessMax(sess,cls){
+  if(sess==='after') return AFTER_SLOTS;
+  if(sess==='afternoon') return 4;
+  if(inSandbox()) return 5;
+  return levelOf(cls||curCls)==='tieu-hoc'?5:4;   // morning
+}
+// Cắt mảng tiết cho khớp cấu trúc cấp (THCS/THPT bỏ tiết sáng thứ 5)
+function normalizeSlots(){
+  Object.values(weeks).forEach(w=>Object.entries(w.classes||{}).forEach(([cls,d])=>{
+    ['morning','afternoon'].forEach(sess=>{
+      const mx=sessMax(sess,cls);
+      if(Array.isArray(d[sess])) d[sess]=d[sess].map(row=>Array.isArray(row)?row.slice(0,mx):row);
+    });
+    if(!d.after) d.after=[[],[],[],[],[]];
+  }));
+}
+
+// ─────────────────────────────────────────────────────────────
+// CATEGORY LOGIC
+// ─────────────────────────────────────────────────────────────
+function getCat(s){
+  if(!s||!s.trim())return'empty';
+  const u=s.toUpperCase();
+  if(u.includes('TỰ CHỌN')||u.includes('TU CHON')||u.includes('CÁ NHÂN HÓA'))return'ca-nhan-hoa';
+  if(u.includes('HĐTNHN')||u.includes('LCĐ'))return'hdtn';
+  if(u.startsWith('BD ')||u.startsWith('CLB ')||u.includes(' CĐ')||u.includes('ÔN TH'))return'tang-cuong';
+  if(u.includes('VÕ THUẬT')||u.includes('KNS')||u.includes('BƠI'))return'ky-nang';
+  if(u.includes('STEAM')||u.includes('ĐỌC SÁCH'))return'sang-tao';
+  return'bo-gd';
+}
+
+// ─────────────────────────────────────────────────────────────
+// CONFLICT DETECTION
+// ─────────────────────────────────────────────────────────────
+function getConflicts(){
+  if(_cfltCache) return _cfltCache;
+  const wd=getWeekData(), result=[];
+  for(let d=0;d<5;d++){
+    ['morning','afternoon'].forEach(sess=>{
+      const max=sess==='morning'?5:4;
+      for(let t=0;t<max;t++){
+        const map={};
+        Object.entries(wd).forEach(([cls,data])=>{
+          const cell=((data[sess]||[])[d]||[])[t]||'';
+          if(!cell.trim()) return;
+          const tv=cell.split(' - ').pop().replace(/\s*\(.*\)/g,'').trim();
+          if(!tv) return;
+          (map[tv]=map[tv]||[]).push(cls);
+        });
+        Object.entries(map).forEach(([tv,classes])=>{
+          if(classes.length>1) result.push({day:d,sess,slot:t,teacher:tv,classes});
+        });
+      }
+    });
+  }
+  _cfltCache=result;
+  return result;
+}
+
+function updateConflictBadge(){
+  const n=getConflicts().length;
+  document.getElementById('conflictCount').textContent=n;
+  document.getElementById('conflictWrap').style.display=n>0?'flex':'none';
+}
+
+// ─────────────────────────────────────────────────────────────
+// LỦNG GIỜ (GAP HOURS)
+// ─────────────────────────────────────────────────────────────
+function getLungGio(tvName){
+  const wd=getWeekData(); let total=0;
+  for(let d=0;d<5;d++){
+    ['morning','afternoon'].forEach(sess=>{
+      const max=sess==='morning'?5:4;
+      const slots=[];
+      for(let t=0;t<max;t++){
+        if(Object.values(wd).some(data=>{
+          const cell=((data[sess]||[])[d]||[])[t]||'';
+          return cell.split(' - ').pop().replace(/\s*\(.*\)/g,'').trim()===tvName;
+        })) slots.push(t);
+      }
+      if(slots.length>=2) total+=(slots[slots.length-1]-slots[0]+1)-slots.length;
+    });
+  }
+  return total;
+}
+
+// ─────────────────────────────────────────────────────────────
+// COGNITIVE LOAD
+// ─────────────────────────────────────────────────────────────
+const HEAVY=['TOÁN','NGỮ VĂN','TIẾNG VIỆT','VẬT LÍ','KHTN_LÝ','HÓA HỌC','KHTN_HOÁ','KHTN_SINH','SINH HỌC','SINH','LỊCH SỬ'];
+function isHeavy(c){if(!c) return false; const u=c.toUpperCase(); return HEAVY.some(h=>u.includes(h));}
+
+function getCogLoad(classData){
+  const warns=[];
+  for(let d=0;d<5;d++){
+    const m=classData.morning?.[d]||[];
+    // Tiết 4-5 sáng (index 3,4): tư duy cao liên tục cuối buổi
+    if([m[3],m[4]].filter(Boolean).filter(isHeavy).length>=2) warns.push({day:d,sess:'morning',label:'Cuối sáng nặng'});
+    const a=classData.afternoon?.[d]||[];
+    if([a[2],a[3]].filter(Boolean).filter(isHeavy).length>=2) warns.push({day:d,sess:'afternoon',label:'Cuối chiều nặng'});
+  }
+  return warns;
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTO-SCHEDULER (Tự động xếp lịch)
+// ─────────────────────────────────────────────────────────────
+const CAT_PRIORITY={'bo-gd':1,'hdtn':2,'tang-cuong':3,'ky-nang':4,'sang-tao':5,'ca-nhan-hoa':6};
+const SESSIONS=[['morning',5],['afternoon',4]];
+
+// Ô cố định (không tự động đụng tới): chào cờ, sinh hoạt lớp
+function isFixed(raw){
+  const u=(raw||'').toUpperCase();
+  return u.includes('SHDC')||u.includes('SHL')||u.includes('CHÀO CỜ')||u.includes('SINH HOẠT');
+}
+// Tên môn (bỏ tên GV và ghi chú)
+function subjOf(raw){
+  if(!raw) return '';
+  const p=raw.replace(/\s*\(.*\)/g,'').trim().split(' - ');
+  p.pop();
+  return p.join(' - ').trim().toLowerCase();
+}
+// GV có đang dạy lớp KHÁC vào đúng tiết này không
+function teacherBusyAt(teacher,d,sess,t,exceptCls){
+  const wd=getWeekData();
+  return Object.entries(wd).some(([c,data])=>{
+    if(c===exceptCls) return false;
+    const cell=((data[sess]||[])[d]||[])[t]||'';
+    return cell.split(' - ').pop().replace(/\s*\(.*\)/g,'').trim()===teacher;
+  });
+}
+
+// Tạo ngân hàng môn học bằng cách đếm số tiết trong TKB hiện tại
+function buildBankFromTKB(cls){
+  const d=getWeekData()[cls]; if(!d) return [];
+  const map={};
+  SESSIONS.forEach(([sess])=>(d[sess]||[]).forEach(row=>(row||[]).forEach(raw=>{
+    if(!raw||!raw.trim()) return;
+    const clean=raw.replace(/\s*\(.*\)/g,'').trim();
+    const parts=clean.split(' - ');
+    const teacher=parts.pop().trim();
+    const subject=parts.join(' - ').trim();
+    if(!subject) return;
+    const key=subject+'|'+teacher;
+    if(!map[key]) map[key]={subject,teacher,cat:getCat(raw),periods:0};
+    map[key].periods++;
+  })));
+  return Object.values(map).sort((a,b)=>(CAT_PRIORITY[a.cat]||9)-(CAT_PRIORITY[b.cat]||9)||b.periods-a.periods);
+}
+
+// Tạo ngân hàng theo CHUẨN BỘ GD của khối (số tiết bắt buộc) — GV để trống, người dùng điền
+function buildBankFromMOET(cls){
+  const std=getStd(gradeOf(cls));
+  if(!std) return [];
+  return std.map(o=>({
+    subject:o.label, teacher:'',
+    cat:/trải nghiệm|HĐTN/i.test(o.label)?'hdtn':'bo-gd',
+    periods:+o.periods||0
+  }));
+}
+
+// Bộ máy xếp lịch: mode='fill' (chỉ điền ô trống) | 'rebuild' (xếp lại từ đầu)
+function autoSchedule(cls,mode){
+  const SESS=[['morning',sessMax('morning',cls)],['afternoon',4]];   // theo cấp của lớp
+  if(!weeks[curWeek].classes[cls])
+    weeks[curWeek].classes[cls]={morning:[[],[],[],[],[]],afternoon:[[],[],[],[],[]],after:[[],[],[],[],[]]};
+  const data=weeks[curWeek].classes[cls];
+  // Chuẩn hóa mảng đầy đủ
+  SESS.forEach(([sess,max])=>{
+    if(!Array.isArray(data[sess])) data[sess]=[];
+    for(let d=0;d<5;d++){
+      if(!Array.isArray(data[sess][d])) data[sess][d]=[];
+      for(let t=0;t<max;t++) if(data[sess][d][t]===undefined) data[sess][d][t]='';
+    }
+  });
+  // Xếp lại: xóa ô không cố định
+  if(mode==='rebuild'){
+    for(let d=0;d<5;d++) SESS.forEach(([sess,max])=>{
+      for(let t=0;t<max;t++){
+        const c=data[sess][d][t]||'';
+        if(c && !isFixed(c)) data[sess][d][t]='';
+      }
+    });
+  }
+  // Danh sách tất cả ô
+  const slots=[];
+  for(let d=0;d<5;d++) SESS.forEach(([sess,max])=>{for(let t=0;t<max;t++) slots.push({d,sess,t});});
+  const countExisting=sub=>slots.reduce((n,{d,sess,t})=>n+(subjOf(data[sess][d][t]||'')===sub.toLowerCase()?1:0),0);
+
+  const reqs=[...(subjectReqs[cls]||[])].sort((a,b)=>
+    (CAT_PRIORITY[a.cat]||9)-(CAT_PRIORITY[b.cat]||9)||b.periods-a.periods);
+
+  const unplaced={}; let placedTotal=0;
+
+  reqs.forEach(req=>{
+    let need=req.periods-countExisting(req.subject);
+    while(need>0){
+      let best=null,bestScore=-1e9;
+      slots.forEach(({d,sess,t})=>{
+        if((data[sess][d][t]||'').trim()) return;                   // ô đã có
+        if(teacherBusyAt(req.teacher,d,sess,t,cls)) return;          // trùng GV
+        if(isUnavail(req.teacher,d,sess,t)) return;                  // GV bận
+        let sameDay=0,dayFill=0;
+        SESSIONS.forEach(([s2,m2])=>{for(let tt=0;tt<m2;tt++){
+          const c=data[s2][d][tt]||'';
+          if(c){dayFill++; if(subjOf(c)===req.subject.toLowerCase()) sameDay++;}
+        }});
+        let score=Math.random()*2;
+        score-=sameDay*100;            // rải đều, không dồn 1 ngày
+        score-=dayFill*1.5;            // cân bằng tải các ngày
+        if(isHeavy(req.subject)){ if(sess==='afternoon') score-=40; score-=t*4; }  // môn nặng → sáng, sớm
+        if(req.cat==='bo-gd' && sess==='afternoon') score-=12;
+        if((req.cat==='ky-nang'||req.cat==='sang-tao') && sess==='morning') score-=8;
+        if(score>bestScore){bestScore=score;best={d,sess,t};}
+      });
+      if(!best){ unplaced[req.subject]=(unplaced[req.subject]||0)+need; break; }
+      data[best.sess][best.d][best.t]=`${req.subject} - ${req.teacher}`;
+      placedTotal++; need--;
+    }
+  });
+  return {placed:placedTotal,unplaced,mode};
+}
+
+// ─────────────────────────────────────────────────────────────
+// TEACHER AVAILABILITY
+// ─────────────────────────────────────────────────────────────
+function isUnavail(tv,day,sess,slot){return(teacherAvail[tv]||[]).includes(`${day}-${sess}-${slot}`);}
+
+function toggleAvail(tv,day,sess,slot){
+  const key=`${day}-${sess}-${slot}`;
+  if(!teacherAvail[tv]) teacherAvail[tv]=[];
+  const i=teacherAvail[tv].indexOf(key);
+  if(i>=0) teacherAvail[tv].splice(i,1); else teacherAvail[tv].push(key);
+  lsSave('xtd-avail',teacherAvail);
+  renderAvailGrid(tv);
+}
+
+let _availTv=null;
+function openAvailModal(tv){
+  _availTv=tv;
+  document.getElementById('availTeacherName').textContent=tv;
+  renderAvailGrid(tv);
+  document.getElementById('availModal').classList.add('open');
+}
+function closeAvailModal(){document.getElementById('availModal').classList.remove('open');_availTv=null;}
+
+function renderAvailGrid(tv){
+  let h=`<table class="avail-tbl"><thead><tr><th></th>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>`;
+  ['morning','afternoon'].forEach((sess,si)=>{
+    const max=si===0?5:4; const label=si===0?'Sáng':'Chiều';
+    h+=`<tr><td colspan="${DAYS.length+1}" class="avail-sess">${si===0?'☀':'🌙'} Buổi ${label}</td></tr>`;
+    for(let t=0;t<max;t++){
+      h+=`<tr><td style="font-size:10px;font-weight:700;color:var(--tx3);padding:2px 6px;text-align:right">T${t+1}</td>`;
+      DAYS.forEach((_,d)=>{
+        const na=isUnavail(tv,d,sess,t);
+        h+=`<td style="text-align:center"><button class="avail-slot ${na?'na':'av'}"
+          onclick="toggleAvail('${tv}',${d},'${sess}',${t})">${na?'✗':t+1}</button></td>`;
+      });
+      h+='</tr>';
+    }
+  });
+  document.getElementById('availGrid').innerHTML=h+'</tbody></table>';
+}
+
+// ─────────────────────────────────────────────────────────────
+// TEACHER DETAIL
+// ─────────────────────────────────────────────────────────────
+function openTvDetail(tvName){
+  const tg=isThinhGiang(tvName);
+  document.getElementById('tvDetailName').innerHTML=
+    `${tvName} <span class="type-tog ${tg?'thinh-giang':'co-huu'}" style="font-size:11px;vertical-align:middle;cursor:default">
+      ${tg?'🎓 Thỉnh giảng':'🏫 Cơ hữu'}
+    </span>`;
+  const wd=getWeekData();
+  const conflicts=getConflicts();
+
+  // Legend — lủng giờ chỉ hiện cho thỉnh giảng
+  const legend=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:10px 12px;
+    background:var(--bg);border-radius:var(--rm);font-size:11px;color:var(--tx2)">
+    <span style="display:flex;align-items:center;gap:5px">
+      <span style="width:12px;height:12px;border-radius:3px;background:rgba(0,122,255,.15);border:1px solid rgba(0,122,255,.3);flex-shrink:0"></span>
+      <strong style="color:var(--tx)">Đang dạy</strong>
+    </span>
+    ${tg?`<span style="display:flex;align-items:center;gap:5px">
+      <span style="width:12px;height:12px;border-radius:3px;background:rgba(255,149,0,.2);border:1px solid rgba(255,149,0,.4);flex-shrink:0"></span>
+      <strong style="color:#A85800">Lủng giờ</strong> — GV thỉnh giảng phải chờ tại trường, không có tiết dạy
+    </span>`:`<span style="display:flex;align-items:center;gap:5px;opacity:.5">
+      <span style="width:12px;height:12px;border-radius:3px;background:var(--bg);border:1px solid var(--bs);flex-shrink:0"></span>
+      Lủng giờ không áp dụng — GV cơ hữu làm việc giờ hành chính
+    </span>`}
+    <span style="display:flex;align-items:center;gap:5px">
+      <span style="width:12px;height:12px;border-radius:3px;background:rgba(255,59,48,.15);border:1px solid rgba(255,59,48,.3);flex-shrink:0"></span>
+      <strong style="color:#FF3B30">Xung đột ⚠</strong> — được xếp dạy 2 lớp cùng tiết (hover để xem chi tiết)
+    </span>
+  </div>`;
+
+  // Build grid
+  let grid=legend+`<table class="tvd-tbl"><thead><tr><th class="tvd-th" style="width:55px"></th>
+    ${DAYS.map(d=>`<th class="tvd-th">${d}</th>`).join('')}</tr></thead><tbody>`;
+
+  ['morning','afternoon'].forEach((sess,si)=>{
+    const max=si===0?5:4;
+    grid+=`<tr><td colspan="${DAYS.length+1}" style="padding:6px 0 3px;font-size:9px;font-weight:700;
+      letter-spacing:.8px;text-transform:uppercase;color:var(--tx3);border-top:var(--bs)">
+      ${si===0?'☀ BUỔI SÁNG':'🌙 BUỔI CHIỀU'}</td></tr>`;
+
+    // Build gap map: for each day, find min/max teaching slot within session
+    const gapMap={};
+    for(let d=0;d<5;d++){
+      const teachSlots=[];
+      for(let t=0;t<max;t++){
+        const any=Object.values(wd).some(data=>{
+          const cell=((data[sess]||[])[d]||[])[t]||'';
+          return cell.split(' - ').pop().replace(/\s*\(.*\)/g,'').trim()===tvName;
+        });
+        if(any) teachSlots.push(t);
+      }
+      gapMap[d]=teachSlots;
+    }
+
+    for(let t=0;t<max;t++){
+      grid+=`<tr><td style="font-size:10px;font-weight:700;color:var(--tx3);text-align:right;padding:2px 8px">Tiết ${t+1}</td>`;
+      DAYS.forEach((_,d)=>{
+        const slots=gapMap[d];
+        const isTeaching=slots.includes(t);
+        // Lủng giờ chỉ áp dụng cho GV thỉnh giảng; cơ hữu coi như tiết trống bình thường
+        const isGap=tg && !isTeaching && slots.length>=2 && t>slots[0] && t<slots[slots.length-1];
+        const isUn=isUnavail(tvName,d,sess,t);
+        const cflt=conflicts.some(c=>c.teacher===tvName&&c.day===d&&c.sess===sess&&c.slot===t);
+
+        // Find what class this teacher is teaching
+        let clsLabel='';
+        if(isTeaching){
+          Object.entries(wd).forEach(([cls,data])=>{
+            const cell=((data[sess]||[])[d]||[])[t]||'';
+            if(cell.split(' - ').pop().replace(/\s*\(.*\)/g,'').trim()===tvName) clsLabel=cls;
+          });
+        }
+
+        let cls2='tvd-free', content='', tipAttr='';
+        if(cflt){
+          const cfltEntry=conflicts.find(c=>c.teacher===tvName&&c.day===d&&c.sess===sess&&c.slot===t);
+          const allCls=cfltEntry?cfltEntry.classes.join(' + '):clsLabel;
+          const tip=`${tvName} được xếp dạy ${cfltEntry?.classes?.length||2} lớp cùng Tiết ${t+1} ${DAYS[d]}: ${allCls}. Cần đổi GV cho 1 trong các lớp này.`;
+          cls2='tvd-cflt'; content='⚠ '+clsLabel; tipAttr=`data-tip="${tip}"`;
+        } else if(isTeaching){
+          cls2='tvd-teach'; content=clsLabel;
+        } else if(isGap){
+          const tip=`Tiết trống kẹp giữa 2 tiết dạy trong buổi ${sess==='morning'?'sáng':'chiều'}. ${tvName} phải có mặt tại trường nhưng không có lịch dạy — thời gian chờ lãng phí.`;
+          cls2='tvd-gap'; content='lủng'; tipAttr=`data-tip="${tip}"`;
+        } else if(isUn){
+          cls2='tvd-unavail'; content='✗'; tipAttr=`data-tip="GV đã đánh dấu không thể dạy vào khung giờ này."`;
+        }
+        grid+=`<td class="tvd-cell ${cls2}" ${tipAttr} style="${tipAttr?'cursor:help':''}">${content}</td>`;
+      });
+      grid+='</tr>';
+    }
+  });
+  grid+='</tbody></table>';
+  document.getElementById('tvDetailGrid').innerHTML=grid;
+
+  // Stats
+  const gaps=getLungGio(tvName);
+  const cfltCount=conflicts.filter(c=>c.teacher===tvName).length;
+  const allClasses=curColumns();
+  let total=0; const clsSet=new Set();
+  allClasses.forEach(cls=>{
+    const d=wd[cls]; if(!d) return;
+    [...(d.morning||[]),...(d.afternoon||[])].forEach(row=>(row||[]).forEach(r=>{
+      if(!r) return;
+      const t=r.split(' - ').pop().replace(/\s*\(.*\)/g,'').trim();
+      if(t===tvName){total++;clsSet.add(cls);}
+    }));
+  });
+
+  document.getElementById('tvDetailStats').innerHTML=`
+    <div class="tvd-stat"><span>📚</span><span class="tvd-stat-val">${total}</span><span style="color:var(--tx2)">tiết/tuần</span></div>
+    <div class="tvd-stat"><span>🏫</span><span class="tvd-stat-val">${clsSet.size}</span><span style="color:var(--tx2)">lớp dạy</span></div>
+    ${tg
+      ? `<div class="tvd-stat" style="${gaps>0?'border-color:rgba(255,149,0,.4)':''}">
+          <span>${gaps>0?'⚠':'✅'}</span><span class="tvd-stat-val" style="${gaps>0?'color:#A85800':''}">${gaps}</span>
+          <span style="color:var(--tx2)">lủng giờ/tuần</span>
+        </div>`
+      : `<div class="tvd-stat" style="opacity:.4" data-tip="GV cơ hữu không tính lủng giờ">
+          <span>–</span><span class="tvd-stat-val">–</span>
+          <span style="color:var(--tx2)">lủng giờ (n/a)</span>
+        </div>`}
+    <div class="tvd-stat" style="${cfltCount>0?'border-color:rgba(255,59,48,.4)':''}">
+      <span>${cfltCount>0?'🔴':'✅'}</span><span class="tvd-stat-val" style="${cfltCount>0?'color:#FF3B30':''}">${cfltCount}</span>
+      <span style="color:var(--tx2)">xung đột</span>
+    </div>`;
+  document.getElementById('tvDetailModal').classList.add('open');
+}
+function closeTvDetail(){document.getElementById('tvDetailModal').classList.remove('open');}
+
+// ─────────────────────────────────────────────────────────────
+// APPLY COLORS TO CSS
+// ─────────────────────────────────────────────────────────────
+function applyColors(){
+  let css='';
+  Object.entries(colors).forEach(([cat,c])=>{
+    css+=`.cat-${cat}{background:${c.bg}} .cat-${cat} .cs{color:${c.tx}} .cat-${cat} .ct{color:${c.tx}}\n`;
+  });
+  let el=document.getElementById('dynColors');
+  if(!el){el=document.createElement('style');el.id='dynColors';document.head.appendChild(el);}
+  el.textContent=css;
+}
+
+// ── Bảng màu rút gọn: chọn 1 màu, app tự pha nền + chữ ──
+const PALETTE=['#007AFF','#5E5CE6','#00C7BE','#34C759','#FF9500','#FF2D55','#AF52DE','#8E8E93'];
+let palOpen=null; // nhóm đang mở bảng chọn màu
+function _h2r(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function _r2h(r,g,b){return'#'+[r,g,b].map(x=>Math.round(Math.max(0,Math.min(255,x))).toString(16).padStart(2,'0')).join('').toUpperCase();}
+function _mix(hex,tgt,t){const a=_h2r(hex),b=_h2r(tgt);return _r2h(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t);}
+function deriveColor(base){return{bg:_mix(base,'#FFFFFF',0.86),tx:_mix(base,'#000000',0.42),dot:base};}
+function toggleCatPalette(cat){palOpen=palOpen===cat?null:cat;renderSidebar();}
+function setCatColor(cat,base){
+  const d=deriveColor(base);
+  colors[cat].bg=d.bg;colors[cat].tx=d.tx;colors[cat].dot=d.dot;
+  palOpen=null;
+  applyColors();save();
+  if(curView==='tkb')renderSidebar();
+}
+
+// ─────────────────────────────────────────────────────────────
+// STATS
+// ─────────────────────────────────────────────────────────────
+function stats(d){
+  const cnt={'bo-gd':0,'hdtn':0,'tang-cuong':0,'ky-nang':0,'sang-tao':0,'ca-nhan-hoa':0};
+  const tv={};
+  [...(d.morning||[]),...(d.afternoon||[])].forEach(row=>(row||[]).forEach(r=>{
+    if(!r||!r.trim())return;
+    const cat=getCat(r); if(cnt[cat]!==undefined)cnt[cat]++;
+    const t=r.split(' - ').pop().replace(/\s*\(.*\)/,'').trim();
+    if(t)tv[t]=(tv[t]||0)+1;
+  }));
+  return{cnt,tv,total:Object.values(cnt).reduce((a,b)=>a+b,0)};
+}
+
+// ─────────────────────────────────────────────────────────────
+// SETTERS
+// ─────────────────────────────────────────────────────────────
+function setLv(l){
+  curLv=l; curCls=LEVELS[l][0];
+  document.querySelectorAll('.seg-btn').forEach((b,i)=>
+    b.classList.toggle('on',['tieu-hoc','thcs','thpt'][i]===l));
+  renderPills(); render();
+}
+function setCls(c){
+  curCls=c; renderPills();
+  if(curView==='ana')renderAna();
+  else if(curView==='hs')renderStudents();
+  else render();
+}
+function setView(v){
+  curView=v;
+  const vKeys=['tkb','ana','tv','hs','clb','cfg'];
+  document.querySelectorAll('.vtab').forEach((b,i)=>b.classList.toggle('on',vKeys[i]===v));
+  ['vTkb','vAna','vTv','vHs','vClb','vCfg'].forEach((id,i)=>
+    document.getElementById(id).classList.toggle('gone',vKeys[i]!==v));
+  if(v==='ana')renderAna();
+  else if(v==='tv')renderTeachers();
+  else if(v==='hs')renderStudents();
+  else if(v==='clb')renderClbOverview();
+  else if(v==='cfg')renderSettings();
+  else render();
+}
+function toggleEdit(){
+  if(!inSandbox() && !canEdit){
+    const p=prompt('Nhập mật mã để chỉnh sửa thời khóa biểu:');
+    if(p===null) return;
+    if(p!==EDIT_PASSWORD){ alert('Mật mã không đúng.'); return; }
+    unlockEditing();   // mở khóa rồi vào luôn chế độ sửa
+  }
+  editMode=!editMode;
+  const btn=document.getElementById('editToggle');
+  btn.classList.toggle('on',editMode);
+  btn.textContent=editMode?'✅ Đang chỉnh sửa':'✏️ Chỉnh sửa';
+  renderTable();
+  if(curView==='tkb')renderSidebar();
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER PILLS & WEEK LABEL
+// ─────────────────────────────────────────────────────────────
+function renderPills(){
+  const pre=inSandbox()?'':'Lớp ';
+  document.getElementById('pills').innerHTML=curColumns().map(c=>
+    `<button class="pill${c===curCls?' on':''}" onclick="setCls('${c.replace(/'/g,"\\'")}')">${pre}${c}</button>`
+  ).join('');
+}
+function renderWeekLabel(){
+  const w=weeks[curWeek];
+  document.getElementById('weekLabel').textContent=`${w?.name||'?'} · ${w?.date||''}`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// DONUT SVG
+// ─────────────────────────────────────────────────────────────
+function donut(segs,total){
+  const r=40,cx=55,cy=55,sw=13,circ=2*Math.PI*r;
+  let off=0,p='';
+  segs.forEach(({pct,dot})=>{
+    const dash=pct*circ;
+    p+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${dot}" stroke-width="${sw}"
+      stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-off}"/>`;
+    off+=dash;
+  });
+  return`<svg width="110" height="110" style="transform:rotate(-90deg)">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#F5F5F7" stroke-width="${sw}"/>
+    ${p}
+    <text x="${cx}" y="${cy+2}" text-anchor="middle" fill="#1D1D1F" font-size="15" font-weight="700"
+      font-family="-apple-system,sans-serif" transform="rotate(90,${cx},${cy})">${total}</text>
+    <text x="${cx}" y="${cy+13}" text-anchor="middle" fill="#AEAEB2" font-size="9"
+      font-family="-apple-system,sans-serif" transform="rotate(90,${cx},${cy})">tiết/tuần</text>
+  </svg>`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER TABLE
+// ─────────────────────────────────────────────────────────────
+function mkCell(raw,day,session,slot,cfltSet,cfltInfo){
+  const isEd=editMode?'editable':'';
+  const clickAttr=editMode?`onclick="openCellEdit(${day},'${session}',${slot})"` :'';
+  const dropAttr=editMode?`ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dragDrop(event,${day},'${session}',${slot})"`:'';
+  const aft=session==='after';
+  if(!raw||!raw.trim())
+    return`<td><div class="cell empty ${isEd}${aft?' cell-after':''}" ${clickAttr} ${dropAttr}></div></td>`;
+  const ot=raw.includes('Ôn thi')||raw.includes('Ôn th');
+  const cat=ot?'tang-cuong':getCat(raw);
+  const clean=raw.replace(/\s*\(Ôn thi TN\)/gi,'').trim();
+  const parts=clean.split(' - '); const teacher=parts.pop().trim();
+  const subj=parts.join(' - ').trim();
+  const cfltKey=`${day}-${session}-${slot}`;
+  const isCflt=cfltSet&&cfltSet.has(cfltKey);
+  const tip=isCflt&&cfltInfo?cfltInfo.get(cfltKey):'';
+  const dragAttr=editMode?`draggable="true" ondragstart="dragStart(event,${day},'${session}',${slot})" ondragend="dragEnd(event)"`:'';
+  return`<td><div class="cell ${aft?'cell-after':'cat-'+cat} ${isEd}${isCflt?' cell-cflt':''}"
+    ${tip?`data-tip="${tip}"`:''} ${clickAttr} ${dragAttr} ${dropAttr}>
+    <span class="cs">${subj}</span><span class="ct">${teacher}</span>
+  </div></td>`;
+}
+
+// ── Kéo-thả ô để đổi chỗ (chỉ khi đang chỉnh sửa) ──
+let dragSrc=null;
+function dragStart(e,d,s,t){
+  if(!editMode){e.preventDefault();return;}
+  dragSrc={d,s,t};
+  e.dataTransfer.effectAllowed='move';
+  try{e.dataTransfer.setData('text/plain','tkb');}catch(_){}
+  e.currentTarget.classList.add('dragging');
+}
+function dragOver(e){if(!dragSrc)return;e.preventDefault();e.dataTransfer.dropEffect='move';e.currentTarget.classList.add('drag-over');}
+function dragLeave(e){e.currentTarget.classList.remove('drag-over');}
+function dragEnd(){dragSrc=null;document.querySelectorAll('.dragging,.drag-over').forEach(el=>el.classList.remove('dragging','drag-over'));}
+function dragDrop(e,d,s,t){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(!dragSrc) return;
+  if(dragSrc.d===d&&dragSrc.s===s&&dragSrc.t===t){dragSrc=null;return;}
+  const data=classStore(curCls);
+  if(!Array.isArray(data[dragSrc.s][dragSrc.d])) data[dragSrc.s][dragSrc.d]=[];
+  if(!Array.isArray(data[s][d])) data[s][d]=[];
+  const srcVal=data[dragSrc.s][dragSrc.d][dragSrc.t]||'';
+  const tgtVal=data[s][d][t]||'';
+  data[dragSrc.s][dragSrc.d][dragSrc.t]=tgtVal;  // hoán đổi 2 ô
+  data[s][d][t]=srcVal;
+  dragSrc=null;
+  save(); render();
+}
+
+function renderTable(){
+  const d=getClassData();
+  // Build conflict key set + tooltip info for current class
+  const cfltSet=new Set(), cfltInfo=new Map();
+  getConflicts().forEach(c=>{
+    if(c.classes.includes(curCls)){
+      const key=`${c.day}-${c.sess}-${c.slot}`;
+      cfltSet.add(key);
+      const others=c.classes.filter(cc=>cc!==curCls).join(', ');
+      cfltInfo.set(key,`⚠ ${c.teacher} cùng lúc dạy: ${others}`);
+    }
+  });
+  let h=`<thead><tr>
+    <th class="th-meta" style="width:40px">Buổi</th>
+    <th class="th-meta" style="width:26px">Tiết</th>
+    ${DAYS.map(x=>`<th class="th-day">${x}</th>`).join('')}
+  </tr></thead><tbody>`;
+  const mMax=sessMax('morning',curCls);
+  h+=`<tr class="sess"><td colspan="${2+DAYS.length}">☀ Buổi sáng</td></tr>`;
+  for(let t=0;t<mMax;t++){
+    h+=`<tr>${t===0?`<td class="td-buoi" rowspan="${mMax}">Sáng</td>`:''}
+      <td class="td-tiet">${t+1}</td>
+      ${DAYS.map((_,di)=>mkCell((d.morning[di]||[])[t]||'',di,'morning',t,cfltSet,cfltInfo)).join('')}
+    </tr>`;
+  }
+  h+=`<tr class="sess"><td colspan="${2+DAYS.length}">🌙 Buổi chiều</td></tr>`;
+  for(let t=0;t<4;t++){
+    h+=`<tr>${t===0?`<td class="td-buoi" rowspan="4">Chiều</td>`:''}
+      <td class="td-tiet">${t+1}</td>
+      ${DAYS.map((_,di)=>mkCell((d.afternoon[di]||[])[t]||'',di,'afternoon',t,cfltSet,cfltInfo)).join('')}
+    </tr>`;
+  }
+  // Khu CLB ngoài giờ (tự nguyện) — tách biệt, không tính vào chương trình
+  const af=d.after||[];
+  h+=`<tr class="sess sess-after"><td colspan="${2+DAYS.length}">🔔 CLB ngoài giờ · tự nguyện (sau khi tan học — ai muốn đào sâu thì ở lại)</td></tr>`;
+  for(let t=0;t<AFTER_SLOTS;t++){
+    h+=`<tr>${t===0?`<td class="td-buoi td-buoi-after" rowspan="${AFTER_SLOTS}">Ngoài<br>giờ</td>`:''}
+      <td class="td-tiet">${t+1}</td>
+      ${DAYS.map((_,di)=>mkCell((af[di]||[])[t]||'',di,'after',t,cfltSet,cfltInfo)).join('')}
+    </tr>`;
+  }
+  document.getElementById('tbl').innerHTML=h+'</tbody>';
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER SIDEBAR
+// ─────────────────────────────────────────────────────────────
+function renderSidebar(){
+  const customize = canEdit && !inSandbox();   // chỉnh màu / tự xếp lịch chỉ ở lịch chính
+  const {cnt,tv,total}=stats(getClassData());
+  const segs=Object.entries(colors).map(([cat,c])=>({cat,n:cnt[cat]||0,pct:total?(cnt[cat]||0)/total:0,dot:c.dot}));
+  const legend=segs.map(({cat,n,pct})=>`
+    <div class="leg-item">
+      ${customize
+        ? `<button class="leg-dot leg-dot-btn" style="background:${colors[cat].dot}"
+             onclick="toggleCatPalette('${cat}')" data-tip="Bấm để đổi màu nhóm này"></button>`
+        : `<div class="leg-dot" style="background:${colors[cat].dot}"></div>`}
+      <span style="flex:1;color:var(--tx)">${colors[cat].lbl}</span>
+      <span class="leg-n">${n}t · ${Math.round(pct*100)}%</span>
+    </div>
+    ${customize && palOpen===cat?`<div class="colp-pal">${PALETTE.map(p=>
+      `<button class="colp-opt${p.toUpperCase()===(colors[cat].dot||'').toUpperCase()?' on':''}"
+        style="background:${p}" onclick="setCatColor('${cat}','${p}')"></button>`).join('')}</div>`:''}`).join('');
+  const clsLabel=(inSandbox()?'':'Lớp ')+curCls;
+  const bars=segs.map(({cat,n})=>`
+    <div class="sbar">
+      <div class="sbar-top"><span>${colors[cat].lbl}</span><span>${n}</span></div>
+      <div class="sbar-track"><div class="sbar-fill" style="width:${total?n/total*100:0}%;background:${colors[cat].dot}"></div></div>
+    </div>`).join('');
+  const tvHtml=Object.entries(tv).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([n,c])=>`
+    <div class="tv-row"><span class="tv-n">${n}</span><span class="tv-b">${c} tiết</span></div>`).join('');
+  document.getElementById('sb').innerHTML=`
+    ${customize?`<div class="card" style="border:1px solid var(--ac);background:var(--ac2)">
+      <div class="card-h" style="color:var(--ac)">⚡ Tự động xếp lịch</div>
+      <p style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:10px">
+        Khai báo số tiết mỗi môn → app tự xếp vào ô trống theo ưu tiên, tránh trùng GV.</p>
+      <button class="btn btn-primary" style="width:100%" onclick="openAutoModal()">Mở bảng xếp lịch</button>
+    </div>`:''}
+    <div class="card">
+      <div class="card-h">Phân bổ · ${clsLabel}</div>
+      <div class="donut-row">${donut(segs,total)}</div>
+      ${legend}
+      ${customize?`<div style="font-size:11px;color:var(--tx3);margin-top:8px">🎨 Bấm chấm màu để đổi màu nhóm môn</div>
+      <button class="colp-reset" onclick="resetColors()">↺ Đặt lại màu mặc định</button>`:''}
+    </div>
+    <div class="card">
+      <div class="card-h">Số tiết theo nhóm</div>${bars}
+      <div style="margin-top:10px;padding-top:10px;border-top:var(--b);font-size:11px;color:var(--tx2);line-height:2">
+        <span class="flag" style="background:#E3EFFF;color:#0051A8">BẮT BUỘC</span> Bộ GD, không đổi<br>
+        <span class="flag" style="background:#FFF3E0;color:#A85800">TĂNG CƯỜNG</span> Điều chỉnh được<br>
+        <span class="flag" style="background:#FFE8EF;color:#AA0E2F">TRACK</span> Cá nhân hóa năm sau
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h">GV · ${clsLabel}</div>${tvHtml}
+    </div>`;
+}
+
+function render(){if(curView==='tkb'){renderTable();renderSidebar();}}
+
+// ─────────────────────────────────────────────────────────────
+// ANALYSIS
+// ─────────────────────────────────────────────────────────────
+// Extract subject name from raw cell (strip teacher and notes)
+function getSubjName(raw){
+  if(!raw||!raw.trim()) return '';
+  const parts=raw.split(' - ');
+  parts.pop(); // remove teacher
+  return parts.join(' - ').replace(/\s*\(.*\)/g,'').trim();
+}
+
+// Count periods per subject for a class, returning [{name, cat, count}] sorted desc
+function subjectCounts(d){
+  const map={};
+  [...(d.morning||[]),...(d.afternoon||[])].forEach(row=>(row||[]).forEach(r=>{
+    if(!r||!r.trim()) return;
+    const name=getSubjName(r);
+    if(!name) return;
+    if(!map[name]) map[name]={name, cat:getCat(r), count:0};
+    map[name].count++;
+  }));
+  return Object.values(map).sort((a,b)=>b.count-a.count);
+}
+
+// ─────────────────────────────────────────────────────────────
+// CHUẨN BỘ GD&ĐT — số tiết/tuần môn bắt buộc (GDPT 2018, TT 32/2018)
+// Mỗi mục: [tên môn, số tiết/tuần, [từ khóa nhận diện trong TKB]]
+// ─────────────────────────────────────────────────────────────
+const MOET_STD_DEFAULT={
+  1:[['Tiếng Việt',12,['tiếng việt']],['Toán',3,['toán']],['Đạo đức',1,['đạo đức']],['Tự nhiên & Xã hội',2,['tnxh','tự nhiên và xã']],['Giáo dục thể chất',2,['gdtc','thể chất']],['Nghệ thuật (Nhạc+Họa)',2,['âm nhạc','mĩ thuật','mỹ thuật']],['Hoạt động trải nghiệm',3,['hđtn','trải nghiệm']]],
+  2:[['Tiếng Việt',10,['tiếng việt']],['Toán',5,['toán']],['Đạo đức',1,['đạo đức']],['Tự nhiên & Xã hội',2,['tnxh','tự nhiên và xã']],['Giáo dục thể chất',2,['gdtc','thể chất']],['Nghệ thuật (Nhạc+Họa)',2,['âm nhạc','mĩ thuật','mỹ thuật']],['Hoạt động trải nghiệm',3,['hđtn','trải nghiệm']]],
+  3:[['Tiếng Việt',7,['tiếng việt']],['Toán',5,['toán']],['Ngoại ngữ 1 (T.Anh)',4,['tiếng anh','ngoại ngữ']],['Đạo đức',1,['đạo đức']],['Tự nhiên & Xã hội',2,['tnxh','tự nhiên và xã']],['Tin học & Công nghệ',2,['tin học','công nghệ']],['Giáo dục thể chất',2,['gdtc','thể chất']],['Nghệ thuật (Nhạc+Họa)',2,['âm nhạc','mĩ thuật','mỹ thuật']],['Hoạt động trải nghiệm',3,['hđtn','trải nghiệm']]],
+  4:[['Tiếng Việt',7,['tiếng việt']],['Toán',5,['toán']],['Ngoại ngữ 1 (T.Anh)',4,['tiếng anh','ngoại ngữ']],['Đạo đức',1,['đạo đức']],['Lịch sử & Địa lí',2,['lsđl','lịch sử và địa']],['Khoa học',2,['khoa học']],['Tin học & Công nghệ',2,['tin học','công nghệ']],['Giáo dục thể chất',2,['gdtc','thể chất']],['Nghệ thuật (Nhạc+Họa)',2,['âm nhạc','mĩ thuật','mỹ thuật']],['Hoạt động trải nghiệm',3,['hđtn','trải nghiệm']]],
+  5:[['Tiếng Việt',7,['tiếng việt']],['Toán',5,['toán']],['Ngoại ngữ 1 (T.Anh)',4,['tiếng anh','ngoại ngữ']],['Đạo đức',1,['đạo đức']],['Lịch sử & Địa lí',2,['lsđl','lịch sử và địa']],['Khoa học',2,['khoa học']],['Tin học & Công nghệ',2,['tin học','công nghệ']],['Giáo dục thể chất',2,['gdtc','thể chất']],['Nghệ thuật (Nhạc+Họa)',2,['âm nhạc','mĩ thuật','mỹ thuật']],['Hoạt động trải nghiệm',3,['hđtn','trải nghiệm']]],
+  6:[['Ngữ văn',4,['ngữ văn']],['Toán',4,['toán']],['Ngoại ngữ 1 (T.Anh)',3,['tiếng anh','ngoại ngữ']],['GD công dân',1,['gdcd','công dân']],['Lịch sử & Địa lí',3,['lsđl','lịch sử và địa']],['Khoa học tự nhiên',4,['khtn','khoa học tự nhiên']],['Công nghệ',1,['công nghệ']],['Tin học',1,['tin học']],['Giáo dục thể chất',2,['gdtc','thể chất']],['Nghệ thuật (Nhạc+Họa)',2,['âm nhạc','mĩ thuật','mỹ thuật']],['HĐ trải nghiệm, HN',3,['hđtn','trải nghiệm']],['GD địa phương',1,['gdđp','địa phương']]],
+  7:[['Ngữ văn',4,['ngữ văn']],['Toán',4,['toán']],['Ngoại ngữ 1 (T.Anh)',3,['tiếng anh','ngoại ngữ']],['GD công dân',1,['gdcd','công dân']],['Lịch sử & Địa lí',3,['lsđl','lịch sử và địa']],['Khoa học tự nhiên',4,['khtn','khoa học tự nhiên']],['Công nghệ',1,['công nghệ']],['Tin học',1,['tin học']],['Giáo dục thể chất',2,['gdtc','thể chất']],['Nghệ thuật (Nhạc+Họa)',2,['âm nhạc','mĩ thuật','mỹ thuật']],['HĐ trải nghiệm, HN',3,['hđtn','trải nghiệm']],['GD địa phương',1,['gdđp','địa phương']]],
+  8:[['Ngữ văn',4,['ngữ văn']],['Toán',4,['toán']],['Ngoại ngữ 1 (T.Anh)',3,['tiếng anh','ngoại ngữ']],['GD công dân',1,['gdcd','công dân']],['Lịch sử & Địa lí',3,['lsđl','lịch sử và địa']],['Khoa học tự nhiên',4,['khtn','khoa học tự nhiên']],['Công nghệ',2,['công nghệ']],['Tin học',1,['tin học']],['Giáo dục thể chất',2,['gdtc','thể chất']],['Nghệ thuật (Nhạc+Họa)',2,['âm nhạc','mĩ thuật','mỹ thuật']],['HĐ trải nghiệm, HN',3,['hđtn','trải nghiệm']],['GD địa phương',1,['gdđp','địa phương']]],
+  9:[['Ngữ văn',4,['ngữ văn']],['Toán',4,['toán']],['Ngoại ngữ 1 (T.Anh)',3,['tiếng anh','ngoại ngữ']],['GD công dân',1,['gdcd','công dân']],['Lịch sử & Địa lí',3,['lsđl','lịch sử và địa']],['Khoa học tự nhiên',4,['khtn','khoa học tự nhiên']],['Công nghệ',1,['công nghệ']],['Tin học',1,['tin học']],['Giáo dục thể chất',2,['gdtc','thể chất']],['Nghệ thuật (Nhạc+Họa)',2,['âm nhạc','mĩ thuật','mỹ thuật']],['HĐ trải nghiệm, HN',3,['hđtn','trải nghiệm']],['GD địa phương',1,['gdđp','địa phương']]],
+  10:[['Ngữ văn',3,['ngữ văn']],['Toán',3,['toán']],['Ngoại ngữ 1 (T.Anh)',3,['tiếng anh','ngoại ngữ']],['Lịch sử',2,['lịch sử']],['Giáo dục thể chất',2,['gdtc','thể chất']],['GD quốc phòng-AN',1,['gdqp','quốc phòng']],['HĐ trải nghiệm, HN',3,['hđtn','trải nghiệm']],['GD địa phương',1,['gdđp','địa phương']]],
+  11:[['Ngữ văn',3,['ngữ văn']],['Toán',3,['toán']],['Ngoại ngữ 1 (T.Anh)',3,['tiếng anh','ngoại ngữ']],['Lịch sử',2,['lịch sử']],['Giáo dục thể chất',2,['gdtc','thể chất']],['GD quốc phòng-AN',1,['gdqp','quốc phòng']],['HĐ trải nghiệm, HN',3,['hđtn','trải nghiệm']],['GD địa phương',1,['gdđp','địa phương']]],
+  12:[['Ngữ văn',3,['ngữ văn']],['Toán',3,['toán']],['Ngoại ngữ 1 (T.Anh)',3,['tiếng anh','ngoại ngữ']],['Lịch sử',2,['lịch sử']],['Giáo dục thể chất',2,['gdtc','thể chất']],['GD quốc phòng-AN',1,['gdqp','quốc phòng']],['HĐ trải nghiệm, HN',3,['hđtn','trải nghiệm']],['GD địa phương',1,['gdđp','địa phương']]],
+};
+function gradeOf(cls){return parseInt(cls,10);}
+// Chuẩn hiệu lực cho 1 khối: bản đã chỉnh tay (moetStd) nếu có, không thì mặc định.
+function getStd(grade){
+  if(moetStd[grade]) return moetStd[grade];
+  const def=MOET_STD_DEFAULT[grade];
+  return def?def.map(([label,periods,match])=>({label,periods,match:match.slice()})):null;
+}
+// Tạo bản chỉnh tay (sao từ mặc định) để sửa
+function ownStd(grade){ if(!moetStd[grade]) moetStd[grade]=getStd(grade)||[]; return moetStd[grade]; }
+// Đếm số tiết thực tế của môn bắt buộc (chỉ tính nhóm Bộ GD + HĐTN, bỏ BD/CLB/CĐ/ôn thi)
+function moetCountActual(d,matchers){
+  if(!matchers||!matchers.length) return 0;
+  let n=0;
+  SESSIONS.forEach(([sess])=>(d[sess]||[]).forEach(row=>(row||[]).forEach(raw=>{
+    if(!raw||!raw.trim()) return;
+    const cat=getCat(raw);
+    if(cat!=='bo-gd'&&cat!=='hdtn') return;
+    const s=(raw.split(' - ').slice(0,-1).join(' - ')||'').toLowerCase();
+    if(matchers.some(m=>m&&s.includes(m))) n++;
+  })));
+  return n;
+}
+function moetCheck(cls){
+  const grade=gradeOf(cls), std=getStd(grade);
+  if(!std) return null;
+  const d=getWeekData()[cls]; if(!d) return null;
+  const rows=std.map((o,i)=>{
+    const need=+o.periods||0, have=moetCountActual(d,o.match||[o.label.toLowerCase()]);
+    return {i,label:o.label,need,have,short:Math.max(0,need-have)};
+  });
+  return {grade,rows,
+    totalShort:rows.reduce((a,r)=>a+r.short,0),
+    metCount:rows.filter(r=>r.have>=r.need).length,
+    isHighschool:grade>=10};
+}
+function setMoetNeed(grade,i,val){ const a=ownStd(grade); if(a[i]) a[i].periods=Math.max(0,+val||0); save(); renderAna(); }
+function setMoetLabel(grade,i,val){
+  const a=ownStd(grade); if(!a[i])return;
+  a[i].label=val;
+  const key=(val||'').toLowerCase().trim();
+  if(key) a[i].match=[...new Set([...(a[i].match||[]),key])];
+  save(); renderAna();
+}
+function addMoetRow(grade){ ownStd(grade).push({label:'Môn mới',periods:1,match:['môn mới']}); save(); renderAna(); }
+function delMoetRow(grade,i){ const a=ownStd(grade); a.splice(i,1); save(); renderAna(); }
+function resetMoetGrade(grade){ if(confirm('Khôi phục chuẩn mặc định cho khối này?')){ delete moetStd[grade]; save(); renderAna(); } }
+
+function renderAna(){
+  const wd=getWeekData();
+  const conflicts=getConflicts();
+  const cols=curColumns();
+  if(cols.length && !cols.includes(curCls)) curCls=cols[0];
+
+  // ── Dải tổng quan: tất cả lớp trong khối, bấm để chọn ──
+  const ov=cols.map(c=>{
+    const d=wd[c]; if(!d) return '';
+    const {cnt,total}=stats(d);
+    const pBo=total?Math.round((cnt['bo-gd']+cnt['hdtn'])/total*100):0;
+    const mc=moetCheck(c);
+    const stat=mc?(mc.totalShort===0
+      ?`<span class="ov-stat" style="color:#1A7835">✓ đủ chuẩn</span>`
+      :`<span class="ov-stat" style="color:#A85800">thiếu ${mc.totalShort} tiết</span>`):'<span class="ov-stat" style="color:var(--tx3)">—</span>';
+    return`<button class="ana-ov-chip${c===curCls?' on':''}" onclick="setCls('${(''+c).replace(/'/g,"\\'")}')">
+      <div class="ov-cls">${inSandbox()?'':'Lớp '}${c}</div>
+      <div class="ov-pct">${pBo}%</div>${stat}
+    </button>`;
+  }).join('');
+
+  // ── Lớp đang chọn ──
+  const c=curCls, d=wd[c]||{morning:[],afternoon:[]};
+  const {cnt,tv,total}=stats(d);
+  const pBo=total?Math.round((cnt['bo-gd']+cnt['hdtn'])/total*100):0;
+  const tcCount=cnt['ca-nhan-hoa']||0;
+  const cogWarns=getCogLoad(d);
+  const clsCflt=conflicts.filter(cc=>cc.classes.includes(c)).length;
+  const qScore=Math.max(0,100-cogWarns.length*8-clsCflt*15);
+  const qColor=qScore>=80?'#34C759':qScore>=60?'#FF9500':'#FF3B30';
+  const mc=moetCheck(c);
+  const subjList=subjectCounts(d);
+  const segs=Object.entries(colors).map(([cat,cc])=>({cat,n:cnt[cat]||0,pct:total?(cnt[cat]||0)/total:0,dot:cc.dot}));
+
+  const legend=segs.filter(s=>s.n>0).map(s=>`
+    <div class="leg-item">
+      <div class="leg-dot" style="background:${colors[s.cat].dot}"></div>
+      <span style="flex:1;color:var(--tx)">${colors[s.cat].lbl}</span>
+      <span class="leg-n">${s.n}t · ${Math.round(s.pct*100)}%</span>
+    </div>`).join('');
+
+  const cogHtml=(cogWarns.length===0
+    ?`<span class="cog-chip cog-ok" data-tip="Các môn nặng tư duy (Toán, Lý, Văn...) phân bổ đều, không dồn cuối buổi.">✓ Tải nhận thức cân bằng</span>`
+    :cogWarns.map(w=>`<span class="cog-chip cog-warn" data-tip="Có 2+ môn nặng tư duy liên tiếp cuối ${w.sess==='morning'?'buổi sáng':'buổi chiều'}. Học sinh dễ mệt.">${DAYS[w.day]} ${w.label}</span>`).join(''))
+    +(clsCflt>0?`<span class="cog-chip cog-bad" data-tip="${clsCflt} tiết bị trùng GV với lớp khác. Vào tab Giáo viên xem chi tiết.">⚠ ${clsCflt} xung đột GV</span>`:'');
+
+  let moetHtml;
+  const ed=canEdit&&!inSandbox();
+  if(mc){
+    moetHtml=mc.rows.map(r=>{
+      const ok=r.have>=r.need;
+      if(ed){
+        return`<div class="moet-row2${ok?'':' short'}">
+          <input class="moet-lbl" value="${(r.label||'').replace(/"/g,'&quot;')}" onchange="setMoetLabel(${mc.grade},${r.i},this.value)">
+          <span class="mq">cần <input class="moet-need" type="number" min="0" max="20" value="${r.need}" onchange="setMoetNeed(${mc.grade},${r.i},this.value)"> · có <strong>${r.have}</strong></span>
+          <span class="moet-stat ${ok?'ok':'bad'}">${ok?'✓':'−'+r.short}</span>
+          <button class="moet-del" onclick="delMoetRow(${mc.grade},${r.i})" title="Xóa môn">×</button>
+        </div>`;
+      }
+      return`<div class="moet-row2${ok?'':' short'}">
+        <span class="mn">${r.label}</span>
+        <span class="mq">cần <strong>${r.need}</strong> · có <strong>${r.have}</strong></span>
+        <span class="moet-stat ${ok?'ok':'bad'}">${ok?'✓ đủ':'thiếu '+r.short}</span>
+      </div>`;
+    }).join('')
+    +(ed?`<div style="display:flex;gap:8px;margin-top:10px">
+        <button class="colp-reset" style="flex:1" onclick="addMoetRow(${mc.grade})">+ Thêm môn</button>
+        <button class="colp-reset" style="flex:1" onclick="resetMoetGrade(${mc.grade})">↺ Mặc định</button>
+      </div>`:'')
+    +(mc.isHighschool?`<div class="moet-foot">⚠ THPT còn 4 môn lựa chọn + chuyên đề tùy tổ hợp — app chỉ kiểm môn bắt buộc.</div>`:'')
+    +(ed?`<div class="moet-foot">Sửa tên môn / số tiết / thêm / bớt trực tiếp theo đúng quy định trường anh.</div>`:'');
+  }else{
+    moetHtml=`<div style="font-size:12px;color:var(--tx2);line-height:1.6">Nhóm này không có khối chuẩn để đối chiếu (vd lịch thử / nhóm tự đặt).</div>`;
+  }
+
+  const subjHtml=subjList.map(s=>{
+    const dot=colors[s.cat]?.dot||'#999';
+    const isBogd=s.cat==='bo-gd';
+    const tip=isBogd&&s.count<2?`⚠ Môn bắt buộc "${s.name}" chỉ có ${s.count} tiết/tuần — nên kiểm tra lại.`:'';
+    return`<div class="subj-item" ${tip?`data-tip="${tip}"`:''}
+      style="${isBogd&&s.count<2?'background:rgba(255,149,0,.06)':''}">
+      <span class="subj-dot" style="background:${dot}"></span>
+      <span class="subj-name">${s.name}</span>
+      <span class="subj-cnt ${isBogd&&s.count<2?'warn':'ok'}">${s.count}</span>
+    </div>`;
+  }).join('');
+
+  const moetMetric=mc?`<div class="metric"><div class="m-lbl">Chuẩn Bộ GD</div>
+      <div class="m-val" style="color:${mc.totalShort?'#A85800':'#1A7835'};font-size:${mc.totalShort?'18px':'23px'}">${mc.totalShort?('thiếu '+mc.totalShort):'Đủ ✓'}</div></div>`:'';
+
+  document.getElementById('anaGrid').innerHTML=`<div class="ana-dash">
+    <div class="ana-overview">${ov}</div>
+    <div class="ana-head">
+      <div class="ana-title">${inSandbox()?'':'Lớp '}${c}</div>
+      <div class="metrics">
+        <div class="metric"><div class="m-lbl">Chương trình Bộ GD</div><div class="m-val" style="color:${colors['bo-gd'].dot}">${pBo}%</div></div>
+        <div class="metric"><div class="m-lbl">Điểm chất lượng</div><div class="m-val" style="color:${qColor}">${qScore}</div></div>
+        <div class="metric"><div class="m-lbl">Xung đột GV</div><div class="m-val" style="color:${clsCflt?'#FF3B30':'#34C759'}">${clsCflt}</div></div>
+        ${tcCount>0?`<div class="metric"><div class="m-lbl">👤 Tiết tự chọn</div><div class="m-val" style="color:#00C7BE">+${tcCount}</div></div>`:''}
+        ${moetMetric}
+      </div>
+    </div>
+    <div class="ana-cols">
+      <div class="ana-card">
+        <div class="ana-card-h">Phân bổ chương trình · ${total} tiết/tuần</div>
+        <div class="donut-row" style="justify-content:center;margin-bottom:6px">${donut(segs,total)}</div>
+        ${legend}
+        <div class="cog-row" style="margin-top:14px">${cogHtml}</div>
+      </div>
+      <div class="ana-card">
+        <div class="ana-card-h">${mc?(mc.totalShort?'⚠️':'✅'):'📘'} Đối chiếu chuẩn Bộ GD${mc?` — đủ ${mc.metCount}/${mc.rows.length} môn`:''}</div>
+        ${moetHtml}
+      </div>
+    </div>
+    <div class="ana-card">
+      <div class="ana-card-h">📋 Thống kê môn học · ${subjList.length} môn</div>
+      <div class="subj-grid">${subjHtml}</div>
+    </div>
+  </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// TEACHERS VIEW
+// ─────────────────────────────────────────────────────────────
+function renderTeachers(){
+  const wd=getWeekData();
+  const allClasses=curColumns();
+  const conflicts=getConflicts();
+  const tvData={};
+  allClasses.forEach(cls=>{
+    const d=wd[cls]; if(!d) return;
+    [...(d.morning||[]),...(d.afternoon||[])].forEach((row,di)=>{
+      (row||[]).forEach(r=>{
+        if(!r||!r.trim()) return;
+        const t=r.split(' - ').pop().replace(/\s*\(.*\)/,'').trim();
+        if(!t) return;
+        if(!tvData[t]) tvData[t]={days:[0,0,0,0,0],total:0,classes:new Set()};
+        tvData[t].days[di%5]++;
+        tvData[t].total++;
+        tvData[t].classes.add(cls);
+      });
+    });
+  });
+  const sorted=Object.entries(tvData).sort((a,b)=>b[1].total-a[1].total);
+  let h=`<thead><tr>
+    <th>Giáo viên</th>
+    ${DAYS.map(d=>`<th>${d}</th>`).join('')}
+    <th>Tổng</th>
+    <th data-tip="Số tiết GV phải ngồi chờ tại trường giữa 2 tiết dạy trong cùng buổi. VD: dạy tiết 1, nghỉ tiết 2–3, dạy tiết 4 = 2 lủng giờ." style="cursor:help">Lủng giờ ℹ</th>
+    <th data-tip="Số lần GV được xếp dạy 2 lớp khác nhau trong cùng một tiết. Cần điều chỉnh để giải quyết." style="cursor:help">Xung đột ℹ</th>
+    <th>Lớp</th>
+  </tr></thead><tbody>`;
+  sorted.forEach(([name,data])=>{
+    const hi=i=>data.days[i]>3?'hi':'';
+    const gaps=getLungGio(name);
+    const cflt=conflicts.filter(c=>c.teacher===name).length;
+    h+=`<tr>
+      <td><span style="cursor:pointer;color:var(--ac);font-weight:600"
+        onclick="openTvDetail('${name}')">${name}</span></td>
+      ${data.days.map((n,i)=>`<td><span class="tv-cnt ${hi(i)}">${n||'-'}</span></td>`).join('')}
+      <td><span class="tv-cnt hi">${data.total}</span></td>
+      <td>${isThinhGiang(name)
+        ? `<span class="tv-cnt${gaps>0?' hi':''}"
+            style="${gaps>0?'background:rgba(255,149,0,.15);color:#A85800;border-color:rgba(255,149,0,.3)':''}"
+            ${gaps>0?`data-tip="${gaps} tiết/tuần GV thỉnh giảng phải chờ tại trường. Nên gom tiết liên tiếp để tránh lãng phí."`:''}>
+            ${gaps||'–'}</span>`
+        : `<span class="tv-cnt" style="opacity:.35" data-tip="GV cơ hữu làm việc giờ hành chính — thời gian trống dùng soạn bài, không tính lủng giờ.">n/a</span>`
+      }</td>
+      <td><span class="tv-cnt${cflt>0?' hi':''}"
+        style="${cflt>0?'background:rgba(255,59,48,.12);color:#FF3B30;border-color:rgba(255,59,48,.2)':''}"
+        ${cflt>0?`data-tip="${cflt} lần GV này được xếp dạy 2 lớp cùng một tiết. Nhấn vào tên GV để xem chi tiết lịch."`:''}>
+        ${cflt||'–'}</span></td>
+      <td style="font-size:11px;color:var(--tx2)">${[...data.classes].join(', ')}</td>
+    </tr>`;
+  });
+  document.getElementById('tvTable').innerHTML=h+'</tbody>';
+}
+
+// ─────────────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────────────
+function renderSettings(){
+  const tvHtml=teachers.map((t,i)=>{
+    const tg=isThinhGiang(t);
+    const hasAvail=(teacherAvail[t]||[]).length>0;
+    return`<div class="teacher-list-item">
+      <span class="tl-name">${t}</span>
+      <button class="type-tog ${tg?'thinh-giang':'co-huu'}" onclick="toggleType('${t}')"
+        data-tip="${tg?'Thỉnh giảng: đến trường theo lịch hợp đồng. Lủng giờ được theo dõi.':'Cơ hữu: làm việc giờ hành chính. Lủng giờ không áp dụng. Nhấn để đổi sang Thỉnh giảng.'}">
+        ${tg?'🎓 Thỉnh giảng':'🏫 Cơ hữu'}
+      </button>
+      ${tg?`<button class="wbtn" onclick="openAvailModal('${t}')"
+        style="${hasAvail?'background:rgba(0,122,255,.1);color:var(--ac);border-color:rgba(0,122,255,.3)':''}"
+        data-tip="Đặt khung giờ GV này có thể đến trường">🗓${hasAvail?' ✓':''}</button>`:''}
+      <button class="tl-del" onclick="delTeacher(${i})">×</button>
+    </div>`;
+  }).join('');
+
+  document.getElementById('teacherList').innerHTML=tvHtml;
+}
+
+function resetColors(){
+  colors=JSON.parse(JSON.stringify(DEFAULT_COLORS));
+  palOpen=null;
+  applyColors();save();
+  if(curView==='tkb')render();
+  if(curView==='cfg')renderSettings();
+}
+function addTeacher(){
+  const el=document.getElementById('newTeacher');
+  const name=el.value.trim();
+  if(name&&!teachers.includes(name)){teachers.push(name);save();renderSettings();}
+  el.value='';
+}
+function delTeacher(i){teachers.splice(i,1);save();renderSettings();}
+
+// ─────────────────────────────────────────────────────────────
+// CELL EDIT MODAL
+// ─────────────────────────────────────────────────────────────
+function openCellEdit(day,session,slot){
+  editCtx={day,session,slot};
+  const d=getClassData();
+  const raw=(d[session][day]||[])[slot]||'';
+  const parts=raw.split(' - ');
+  const teacher=parts.pop().replace(/\s*\(.*\)/,'').trim();
+  const subj=parts.join(' - ').replace(/\s*\(.*\)/,'').trim();
+  const detectedCat=getCat(raw)||'bo-gd';
+
+  document.getElementById('mSubject').value=subj;
+  document.getElementById('mTeacher').value=teacher;
+  document.getElementById('mCat').value=detectedCat;
+
+  // Populate datalists
+  const wd=getWeekData();
+  const subjects=new Set(), tvSet=new Set(teachers);
+  Object.values(wd).forEach(d2=>[...(d2.morning||[]),...(d2.afternoon||[])].forEach(row=>
+    (row||[]).forEach(r=>{if(r){const p=r.split(' - ');p.pop();subjects.add(p.join(' - ').replace(/\s*\(.*\)/,'').trim());}})));
+  document.getElementById('subjectList').innerHTML=[...subjects].map(s=>`<option value="${s}">`).join('');
+  document.getElementById('teacherList2').innerHTML=[...tvSet].map(t=>`<option value="${t}">`).join('');
+
+  updateCatPreview();
+  updateCellConflictWarn(day, session, slot);
+  document.getElementById('cellModal').classList.add('open');
+  document.getElementById('mSubject').focus();
+}
+
+function updateCellConflictWarn(day, sess, slot){
+  const warnEl=document.getElementById('conflictWarnMsg');
+  const tv=document.getElementById('mTeacher').value.trim();
+  const cflt=getConflicts().find(c=>c.teacher===tv&&c.day===day&&c.sess===sess&&c.slot===slot);
+  const unavail=tv&&isUnavail(tv,day,sess,slot);
+  if(cflt){
+    warnEl.textContent=`⚠️ ${tv} đang dạy ${cflt.classes.filter(c=>c!==curCls).join(', ')} cùng tiết này!`;
+    warnEl.className='conflict-warn show';
+  } else if(unavail){
+    warnEl.textContent=`🗓 ${tv} đã đánh dấu không có mặt vào khung giờ này.`;
+    warnEl.className='conflict-warn show';
+  } else {
+    warnEl.className='conflict-warn';
+  }
+}
+function closeCellModal(){document.getElementById('cellModal').classList.remove('open');editCtx=null;}
+function updateCatPreview(){
+  const cat=document.getElementById('mCat').value;
+  const c=colors[cat]||colors['bo-gd'];
+  const prev=document.getElementById('catPreview');
+  prev.style.background=c.bg; prev.style.color=c.tx;
+  prev.textContent=c.lbl;
+  // Show quick-select chips for personalized category
+  let hint=document.getElementById('caNhanHint');
+  if(!hint){
+    hint=document.createElement('div');hint.id='caNhanHint';
+    hint.style.cssText='margin-top:8px;display:flex;flex-wrap:wrap;gap:6px';
+    prev.parentNode.insertBefore(hint,prev.nextSibling);
+  }
+  if(cat==='ca-nhan-hoa'){
+    hint.innerHTML=`<div style="width:100%;font-size:11px;color:var(--tx2);margin-bottom:2px">Gợi ý môn tự chọn — nhấn để điền nhanh:</div>`
+      +CA_NHAN_HOA_SUBJECTS.map(s=>`<button type="button" onclick="document.getElementById('mSubject').value='${s}'"
+        style="padding:3px 10px;border-radius:12px;font-size:12px;border:1px solid #00C7BE;
+        background:#E0F9F7;color:#005E57;cursor:pointer;font-family:inherit">${s}</button>`).join('');
+  } else {
+    hint.innerHTML='';
+  }
+}
+function saveCellEdit(){
+  if(!editCtx) return;
+  const subj=document.getElementById('mSubject').value.trim();
+  const teacher=document.getElementById('mTeacher').value.trim();
+  const d=classStore(curCls);
+  if(!d[editCtx.session][editCtx.day]) d[editCtx.session][editCtx.day]=[];
+  d[editCtx.session][editCtx.day][editCtx.slot]=subj&&teacher?`${subj} - ${teacher}`:'';
+  save();closeCellModal();render();
+}
+function clearCell(){
+  if(!editCtx) return;
+  const d=getWeekData()[curCls];
+  if(d&&d[editCtx.session]&&d[editCtx.session][editCtx.day])
+    d[editCtx.session][editCtx.day][editCtx.slot]='';
+  save();closeCellModal();render();
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTO-SCHEDULE MODAL (Tự động xếp lịch)
+// ─────────────────────────────────────────────────────────────
+function escAttr(s){return(s||'').replace(/"/g,'&quot;');}
+
+function openAutoModal(){
+  bankDraft=(subjectReqs[curCls]||[]).map(r=>({...r}));
+  if(bankDraft.length===0) bankDraft=buildBankFromMOET(curCls);   // mặc định theo chuẩn Bộ
+  if(bankDraft.length===0) bankDraft=buildBankFromTKB(curCls);    // dự phòng (vd lịch thử không có khối)
+  document.getElementById('autoClsName').textContent=curCls;
+  document.getElementById('autoReport').style.display='none';
+  renderBankTable();
+  document.getElementById('autoModal').classList.add('open');
+}
+function closeAutoModal(){document.getElementById('autoModal').classList.remove('open');}
+
+function renderBankTable(){
+  const totalSlots=(sessMax('morning',curCls)+4)*5; // ô khả dụng theo cấp (45 tiểu học / 40 THCS-THPT)
+  const sum=bankDraft.reduce((a,r)=>a+(+r.periods||0),0);
+  const rows=bankDraft.map((r,i)=>`
+    <div class="bank-row" style="border-left:3px solid ${colors[r.cat]?.dot||'#999'}">
+      <div class="bank-line">
+        <input class="bank-in bank-subj" value="${escAttr(r.subject)}" oninput="bankDraft[${i}].subject=this.value" placeholder="Tên môn học">
+        <input class="bank-in bank-tv" value="${escAttr(r.teacher)}" oninput="bankDraft[${i}].teacher=this.value" placeholder="Giáo viên">
+        <button class="bank-del" onclick="bankDraft.splice(${i},1);renderBankTable()" title="Xóa môn">×</button>
+      </div>
+      <div class="bank-line">
+        <select class="bank-in bank-cat" onchange="bankDraft[${i}].cat=this.value;renderBankTable()">
+          ${Object.entries(colors).map(([k,c])=>`<option value="${k}" ${r.cat===k?'selected':''}>${c.lbl}</option>`).join('')}
+        </select>
+        <span class="bank-numlbl">Số tiết/tuần:</span>
+        <input class="bank-in bank-num" type="number" min="0" max="20" value="${+r.periods||0}" oninput="bankDraft[${i}].periods=+this.value;updateBankSum()">
+      </div>
+    </div>`).join('');
+  document.getElementById('bankTable').innerHTML=`
+    ${rows||'<div style="font-size:13px;color:var(--tx2);padding:8px 4px">Chưa có môn nào. Bấm “📘 Theo chuẩn Bộ GD” hoặc “+ Thêm môn”.</div>'}
+    <div class="bank-sum">Tổng cần xếp: <strong id="bankSum">${sum}</strong> / ${totalSlots} ô khả dụng${sum>totalSlots?' <span style="color:#FF3B30">— vượt quá số ô!</span>':''}</div>`;
+}
+function updateBankSum(){
+  const sum=bankDraft.reduce((a,r)=>a+(+r.periods||0),0);
+  const el=document.getElementById('bankSum'); if(el) el.textContent=sum;
+}
+function addBankRow(){bankDraft.push({subject:'',teacher:'',cat:'bo-gd',periods:1});renderBankTable();}
+function autoFillBankFromMOET(){
+  const b=buildBankFromMOET(curCls);
+  if(b.length===0){alert('Nhóm/lớp này chưa có khối chuẩn Bộ để lấy. Hãy dùng "+ Thêm môn".');return;}
+  if(bankDraft.some(r=>r.subject||r.teacher) && !confirm('Thay bảng hiện tại bằng số tiết theo chuẩn Bộ GD? (Tên GV sẽ để trống để anh điền)')) return;
+  bankDraft=b;renderBankTable();
+}
+function autoFillBankFromTKB(){
+  if(bankDraft.some(r=>r.subject||r.teacher) && !confirm('Thay thế ngân hàng hiện tại bằng số liệu đếm từ TKB?')) return;
+  bankDraft=buildBankFromTKB(curCls);renderBankTable();
+}
+function runAuto(mode){
+  subjectReqs[curCls]=bankDraft
+    .filter(r=>r.subject&&r.teacher&&+r.periods>0)
+    .map(r=>({subject:r.subject.trim(),teacher:r.teacher.trim(),cat:r.cat,periods:+r.periods}));
+  if(subjectReqs[curCls].length===0){alert('Hãy nhập ít nhất 1 môn có đủ tên môn, GV và số tiết > 0.');return;}
+  if(mode==='rebuild' && !confirm('Xếp lại toàn bộ sẽ xóa các tiết hiện có (trừ Chào cờ / Sinh hoạt lớp) rồi xếp lại. Tiếp tục?')) return;
+  const report=autoSchedule(curCls,mode);
+  save();
+  if(curView==='tkb') render();
+  showAutoReport(report);
+}
+function showAutoReport(r){
+  const el=document.getElementById('autoReport');
+  const unp=Object.entries(r.unplaced||{});
+  let html=`<div style="padding:10px 12px;border-radius:var(--rm);background:rgba(52,199,89,.1);border:1px solid rgba(52,199,89,.3);font-size:13px;color:#1A7835">✓ Đã xếp <strong>${r.placed}</strong> tiết (${r.mode==='rebuild'?'xếp lại toàn bộ':'điền chỗ trống'}).</div>`;
+  if(unp.length) html+=`<div style="margin-top:8px;padding:10px 12px;border-radius:var(--rm);background:rgba(255,149,0,.12);border:1px solid rgba(255,149,0,.4);font-size:13px;color:#A85800">⚠ Không đủ ô trống cho: ${unp.map(([s,n])=>`<strong>${s}</strong> (thiếu ${n})`).join(', ')}.<br>Hãy giảm số tiết, xóa môn khác, hoặc thử “Xếp lại toàn bộ”.</div>`;
+  el.innerHTML=html; el.style.display='block';
+}
+
+// ─────────────────────────────────────────────────────────────
+// WEEK MODAL
+// ─────────────────────────────────────────────────────────────
+function openWeekModal(){
+  renderWeekList();
+  document.getElementById('weekModal').classList.add('open');
+}
+function closeWeekModal(){document.getElementById('weekModal').classList.remove('open');}
+function renderWeekList(){
+  document.getElementById('weekList').innerHTML=Object.entries(weeks).map(([id,w])=>`
+    <div class="week-item">
+      <div class="week-dot${id===curWeek?' active':''}"></div>
+      <div class="week-info">
+        <div class="week-name">${w.name}</div>
+        <div class="week-date">${w.date}</div>
+      </div>
+      <div class="week-actions">
+        ${id!==curWeek?`<button class="wbtn" onclick="switchWeek('${id}')">Chọn</button>`:`<button class="wbtn set">Đang dùng</button>`}
+        <button class="wbtn" onclick="cloneWeek('${id}')">Nhân bản</button>
+        ${Object.keys(weeks).length>1&&id!==curWeek?`<button class="wbtn" onclick="deleteWeek('${id}')" style="color:#FF3B30">Xóa</button>`:''}
+      </div>
+    </div>`).join('');
+}
+function switchWeek(id){curWeek=id;save();renderWeekLabel();closeWeekModal();render();}
+function cloneWeek(id){
+  const src=weeks[id];
+  const newId='w'+Date.now();
+  weeks[newId]={
+    name:src.name+' (bản sao)',
+    date:src.date,
+    classes:JSON.parse(JSON.stringify(src.classes))
+  };
+  save();renderWeekList();
+}
+function addWeek(){
+  const name=document.getElementById('newWeekName').value.trim();
+  if(!name) return;
+  const parts=name.split('·');
+  const newId='w'+Date.now();
+  weeks[newId]={name:parts[0].trim(),date:(parts[1]||'').trim(),classes:{}};
+  // init empty schedule for all classes
+  Object.keys(INIT_TKB).forEach(cls=>{
+    weeks[newId].classes[cls]={
+      morning:[[],[],[],[],[]].map(()=>Array(5).fill('')),
+      afternoon:[[],[],[],[],[]].map(()=>Array(4).fill(''))
+    };
+  });
+  document.getElementById('newWeekName').value='';
+  save();renderWeekList();
+}
+function deleteWeek(id){
+  delete weeks[id];
+  if(curWeek===id) curWeek=Object.keys(weeks)[0];
+  save();renderWeekLabel();renderWeekList();render();
+}
+
+// Close modals on bg click
+['cellModal','weekModal','tvDetailModal','availModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target===e.currentTarget){
+      if(id==='cellModal') closeCellModal();
+      else if(id==='weekModal') closeWeekModal();
+      else if(id==='tvDetailModal') closeTvDetail();
+      else if(id==='availModal') closeAvailModal();
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// STUDENTS VIEW
+// ─────────────────────────────────────────────────────────────
+
+// Get all "Tự chọn" slots in current class's TKB
+function getTcSlots(cls){
+  const d=cls?(getWeekData()[cls]||{morning:[],afternoon:[]}):getClassData();
+  const slots=[];
+  ['morning','afternoon'].forEach(sess=>{
+    const max=sess==='morning'?5:4;
+    for(let day=0;day<5;day++){
+      for(let slot=0;slot<max;slot++){
+        const raw=((d[sess]||[])[day]||[])[slot]||'';
+        if(getCat(raw)==='ca-nhan-hoa'){
+          slots.push({day,sess,slot,
+            key:`${day}-${sess}-${slot}`,
+            label:`${DAYS[day]} ${sess==='morning'?'sáng':'chiều'} T${slot+1}`
+          });
+        }
+      }
+    }
+  });
+  return slots;
+}
+
+function getRoster(cls){return studentRosters[cls]||[];}
+function getChoices(sid){return studentChoices[sid]||{};}
+
+function setStudentChoice(sid,key,subj){
+  if(!studentChoices[sid])studentChoices[sid]={};
+  if(subj)studentChoices[sid][key]=subj;
+  else delete studentChoices[sid][key];
+  save();
+}
+
+// Add student
+function showHsAdd(){
+  document.getElementById('hsAddRow').classList.remove('gone');
+  document.getElementById('hsAddRow').style.display='flex';
+  document.getElementById('hsNameInput').focus();
+}
+function hideHsAdd(){
+  document.getElementById('hsAddRow').classList.add('gone');
+  document.getElementById('hsNameInput').value='';
+}
+function submitHsAdd(){
+  const name=document.getElementById('hsNameInput').value.trim();
+  if(!name)return;
+  if(!studentRosters[curCls])studentRosters[curCls]=[];
+  studentRosters[curCls].push({id:curCls+'-'+Date.now(),name});
+  save();
+  hideHsAdd();
+  renderStudents();
+}
+function removeStudent(sid){
+  if(!confirm('Xóa học sinh này?'))return;
+  studentRosters[curCls]=(studentRosters[curCls]||[]).filter(s=>s.id!==sid);
+  delete studentChoices[sid];
+  save();
+  renderStudents();
+}
+
+function renderStudents(){
+  const roster=getRoster(curCls);
+  const tcSlots=getTcSlots();
+
+  // Header title
+  document.getElementById('hsTitle').textContent=`Lớp ${curCls} · ${roster.length} học sinh`;
+
+  // Student list
+  document.getElementById('hsList').innerHTML=roster.length===0
+    ?`<div class="hs-empty">Chưa có học sinh — nhấn "+ Thêm" để bắt đầu</div>`
+    :roster.map((s,i)=>`
+      <div class="hs-item">
+        <span class="hs-item-num">${i+1}</span>
+        <span class="hs-item-name">${s.name}</span>
+        <button class="hs-btn view" onclick="openStuTKB('${s.id}')" data-tip="Xem & in TKB cá nhân">📋</button>
+        <button class="hs-btn del" onclick="removeStudent('${s.id}')" data-tip="Xóa học sinh">×</button>
+      </div>`).join('');
+
+  // Assignment grid
+  const ag=document.getElementById('hsAssignGrid');
+  if(tcSlots.length===0){
+    ag.innerHTML=`<div class="hs-empty">
+      Lớp <strong>${curCls}</strong> chưa có tiết tự chọn.<br><br>
+      Vào <em>Thời khóa biểu → Chỉnh sửa</em>, click một ô và chọn nhóm
+      <strong>"👤 Tiết tự chọn cá nhân hóa"</strong> để kích hoạt.
+    </div>`;
+    return;
+  }
+  if(roster.length===0){
+    ag.innerHTML=`<div class="hs-empty">Thêm học sinh vào danh sách bên trái để bắt đầu phân công.</div>`;
+    return;
+  }
+
+  const slotHeaders=tcSlots.map(sl=>`<th data-tip="${DAYS[sl.day]} — ${sl.sess==='morning'?'Buổi sáng':'Buổi chiều'} — Tiết ${sl.slot+1}">${sl.label}</th>`).join('');
+  const rows=roster.map((s,i)=>{
+    const choices=getChoices(s.id);
+    const cells=tcSlots.map(sl=>{
+      const val=choices[sl.key]||'';
+      const inClbs=clbCatalog.filter(o=>o.kind!=='out'&&o.type==='clb');
+      const inPds=clbCatalog.filter(o=>o.kind!=='out'&&o.type==='phudao');
+      const outs=clbCatalog.filter(o=>o.kind==='out');
+      const mkOpts=arr=>arr.map(o=>{const f=clbFullName(o);return `<option value="${escAttr(f)}"${val===f?' selected':''}>${f}</option>`;}).join('');
+      const opts=`<optgroup label="CLB trong giờ">${mkOpts(inClbs)}</optgroup><optgroup label="Bồi dưỡng / phụ đạo">${mkOpts(inPds)}</optgroup>`
+        +(outs.length?`<optgroup label="CLB ngoài giờ">${mkOpts(outs)}</optgroup>`:'');
+      return`<td><select onchange="setStudentChoice('${s.id}','${sl.key}',this.value)">
+        <option value="">— chọn —</option>${opts}
+      </select></td>`;
+    }).join('');
+    return`<tr>
+      <td style="padding-left:6px"><span style="color:var(--tx3);font-size:11px;margin-right:4px">${i+1}.</span>${s.name}</td>
+      ${cells}
+      <td><button class="hs-btn view" onclick="openStuTKB('${s.id}')">📋 TKB</button></td>
+    </tr>`;
+  }).join('');
+
+  ag.innerHTML=`<div style="overflow-x:auto">
+    <table class="hs-assign-tbl">
+      <thead><tr><th>Học sinh</th>${slotHeaders}<th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// CLB CHIỀU — tổng quan phân bổ 2 tiết tự chọn (CLB / phụ đạo)
+// ─────────────────────────────────────────────────────────────
+function clbOverview(){
+  const classes=Object.keys(LEVELS).flatMap(l=>LEVELS[l]);
+  const perOff={}, offClasses={}, perClass={};
+  let totalStu=0, unassigned=0, hasSlots=false;
+  const inClb=new Set(), inPd=new Set(), outSet=new Set();
+  classes.forEach(cls=>{
+    const roster=studentRosters[cls]||[];
+    const slots=getTcSlots(cls);
+    if(slots.length) hasSlots=true;
+    if(roster.length) perClass[cls]={clb:new Set(),pd:new Set(),total:roster.length,slots:slots.length};
+    roster.forEach(s=>{
+      totalStu++;
+      const ch=studentChoices[s.id]||{};
+      let anyIn=false;
+      slots.forEach(sl=>{const v=ch[sl.key]; if(!v) return;
+        (perOff[v]=perOff[v]||new Set()).add(s.id);
+        (offClasses[v]=offClasses[v]||new Set()).add(cls);
+        if(clbKind(v)==='out'){ outSet.add(s.id); return; }
+        anyIn=true;
+        if(clbType(v)==='clb'){inClb.add(s.id);perClass[cls]&&perClass[cls].clb.add(s.id);}
+        else{inPd.add(s.id);perClass[cls]&&perClass[cls].pd.add(s.id);}
+      });
+      if(slots.length && !anyIn) unassigned++;
+    });
+  });
+  return {totalStu,inClb:inClb.size,inPd:inPd.size,out:outSet.size,unassigned,hasSlots,perOff,offClasses,perClass};
+}
+
+function addClbOffer(kind){clbCatalog.push({name:kind==='out'?'CLB ngoài giờ mới':'CLB mới',label:'',type:'clb',kind:kind||'in',cap:20,teacher:''});save();renderClbOverview();}
+function delClbOffer(i){if(!confirm('Xóa nhóm "'+clbFullName(clbCatalog[i])+'"?'))return;clbCatalog.splice(i,1);save();renderClbOverview();}
+function setClbField(i,f,v){clbCatalog[i][f]=(f==='cap')?Math.max(0,+v||0):v;save();renderClbOverview();}
+function dupClbGroup(i){const o=clbCatalog[i];const n={...o};n.label=o.label?o.label+' (2)':'Nhóm 2';clbCatalog.splice(i+1,0,n);save();renderClbOverview();}
+
+function renderClbOverview(){
+  const box=document.getElementById('vClbBody');
+  const ov=clbOverview();
+  const cnt=name=>(ov.perOff[name]?ov.perOff[name].size:0);
+
+  if(!ov.hasSlots){
+    box.innerHTML=`<div class="ana-dash"><div class="ana-card" style="text-align:center;padding:36px 20px;color:var(--tx2)">
+      <div style="font-size:34px;margin-bottom:10px">🎯</div>
+      <div style="font-weight:600;color:var(--tx);margin-bottom:8px">Chưa có tiết tự chọn nào</div>
+      Vào <em>Thời khóa biểu → Chỉnh sửa</em>, đặt 2 tiết cuối chiều thành nhóm
+      <strong>"👤 Tiết tự chọn cá nhân hóa"</strong>, rồi sang tab <em>Học sinh</em> phân công CLB / phụ đạo cho từng em.
+    </div></div>`;
+    return;
+  }
+
+  const mixOf=full=>(ov.offClasses[full]?ov.offClasses[full].size:0);
+  const catRow=(o,i)=>`<div class="clb-cat-row2" style="border-left:3px solid ${o.type==='phudao'?'#EF9F27':(o.kind==='out'?'#BA7517':'#378ADD')}">
+    <div class="clb-cat-line">
+      <input class="clb-in" style="flex:2" value="${escAttr(o.name)}" onchange="setClbField(${i},'name',this.value)" placeholder="Tên CLB / môn">
+      <input class="clb-in" style="flex:1" value="${escAttr(o.label||'')}" onchange="setClbField(${i},'label',this.value)" placeholder="Nhóm (vd Nhóm 1)">
+      <button class="clb-del" style="background:rgba(0,122,255,.1);color:var(--ac)" onclick="dupClbGroup(${i})" title="Tách thêm nhóm">⎘</button>
+      <button class="clb-del" onclick="delClbOffer(${i})" title="Xóa">×</button>
+    </div>
+    <div class="clb-cat-line">
+      <select class="clb-in" style="flex:1" onchange="setClbField(${i},'type',this.value)">
+        <option value="clb"${o.type==='clb'?' selected':''}>Câu lạc bộ</option>
+        <option value="phudao"${o.type==='phudao'?' selected':''}>Bồi dưỡng / phụ đạo</option>
+      </select>
+      <select class="clb-in" style="flex:1" onchange="setClbField(${i},'kind',this.value)">
+        <option value="in"${o.kind!=='out'?' selected':''}>Trong giờ</option>
+        <option value="out"${o.kind==='out'?' selected':''}>Ngoài giờ</option>
+      </select>
+      <span class="bank-numlbl">Sức chứa</span>
+      <input class="clb-in" style="width:56px;text-align:center" type="number" min="0" value="${o.cap||0}" onchange="setClbField(${i},'cap',this.value)">
+      <input class="clb-in" style="flex:1" value="${escAttr(o.teacher||'')}" placeholder="GV" onchange="setClbField(${i},'teacher',this.value)">
+    </div>
+  </div>`;
+  const catalogEditor=(canEdit&&!inSandbox())?`<div class="ana-card" style="margin-bottom:16px">
+      <div class="ana-card-h">⚙️ Quản lý nhóm CLB — tách/gộp, đặt loại & sức chứa (⎘ = tách thêm 1 nhóm)</div>
+      ${clbCatalog.map(catRow).join('')}
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="colp-reset" style="flex:1" onclick="addClbOffer('in')">+ Nhóm trong giờ</button>
+        <button class="colp-reset" style="flex:1" onclick="addClbOffer('out')">+ Nhóm ngoài giờ</button>
+      </div>
+    </div>`:'';
+
+  const offCard=o=>{
+    const full=clbFullName(o), n=cnt(full), cap=o.cap||0, m=mixOf(full);
+    const over=cap>0&&n>cap, fu=cap>0&&n===cap;
+    const pct=cap>0?Math.min(100,Math.round(n/cap*100)):(n>0?100:0);
+    const col=over?'#E24B4A':fu?'#888780':(o.type==='clb'?(o.kind==='out'?'#BA7517':'#1D9E75'):'#EF9F27');
+    const badge=over?`<span class="clb-badge" style="background:rgba(226,75,74,.14);color:#A32D2D">quá tải ${n-cap}</span>`
+      :fu?`<span class="clb-badge" style="background:var(--bg);color:var(--tx2)">đầy</span>`
+      :cap>0?`<span class="clb-badge" style="background:rgba(52,199,89,.14);color:#1A7835">còn ${cap-n} chỗ</span>`
+      :`<span class="clb-badge" style="background:var(--bg);color:var(--tx2)">${n} em</span>`;
+    return`<div class="clb-card">
+      <div class="clb-nm">${full}</div>
+      <div class="clb-gv">${o.teacher?('GV: '+o.teacher):'Chưa có GV'}${m>1?` · trộn ${m} lớp`:''}</div>
+      <div class="clb-bar"><i style="width:${pct}%;background:${col}"></i></div>
+      <div class="clb-row2"><span>${cap>0?(n+' / '+cap+' chỗ'):(n+' em')}</span>${badge}</div>
+    </div>`;
+  };
+  const emptyMsg=`<div style="color:var(--tx2);font-size:13px">Chưa có nhóm nào.</div>`;
+  const inClbCards=clbCatalog.filter(o=>o.kind!=='out'&&o.type==='clb').map(offCard).join('')||emptyMsg;
+  const inPdCards=clbCatalog.filter(o=>o.kind!=='out'&&o.type==='phudao').map(offCard).join('')||emptyMsg;
+  const outCards=clbCatalog.filter(o=>o.kind==='out').map(offCard).join('')||`<div style="color:var(--tx2);font-size:13px">Chưa có CLB ngoài giờ — bấm "+ Nhóm ngoài giờ".</div>`;
+
+  const classRows=Object.entries(ov.perClass).filter(([,v])=>v.slots>0).map(([cls,v])=>{
+    const clb=v.clb.size, pd=v.pd.size, asg=clb+pd, tot=v.total||1;
+    return`<div class="clb-classrow">
+      <span class="cn">${cls}</span>
+      <div class="clb-stack">
+        <i style="width:${clb/tot*100}%;background:#378ADD"></i>
+        <i style="width:${pd/tot*100}%;background:#EF9F27"></i>
+      </div>
+      <span class="cnr">${clb} CLB · ${pd} PĐ${asg<tot?` · <span style="color:#E24B4A">${tot-asg} chưa xếp</span>`:''}</span>
+    </div>`;
+  }).join('');
+
+  const overCap=clbCatalog.filter(o=>o.cap>0&&cnt(clbFullName(o))>o.cap);
+  const alerts=[
+    ...overCap.map(o=>`<div class="clb-alert bad"><span>⚠️</span><span>${clbFullName(o)} quá tải ${cnt(clbFullName(o))-o.cap} em — tách thêm nhóm hoặc tăng sức chứa.</span></div>`),
+    ...(ov.unassigned>0?[`<div class="clb-alert bad"><span>❓</span><span>${ov.unassigned} em chưa được xếp CLB hay phụ đạo (trong giờ).</span></div>`]:[]),
+  ].join('') || `<div class="clb-alert ok"><span>✅</span><span>Mọi học sinh đều đã được xếp và không nhóm nào quá tải.</span></div>`;
+
+  box.innerHTML=`<div class="ana-dash">
+    ${catalogEditor}
+    <div class="metrics" style="margin-bottom:18px">
+      <div class="metric"><div class="m-lbl">Tổng học sinh</div><div class="m-val">${ov.totalStu}</div></div>
+      <div class="metric"><div class="m-lbl" style="color:var(--ac)">CLB trong giờ</div><div class="m-val" style="color:var(--ac)">${ov.inClb}</div></div>
+      <div class="metric"><div class="m-lbl" style="color:#A85800">Bồi dưỡng/phụ đạo</div><div class="m-val" style="color:#A85800">${ov.inPd}</div></div>
+      <div class="metric"><div class="m-lbl" style="color:#BA7517">CLB ngoài giờ</div><div class="m-val" style="color:#BA7517">${ov.out}</div></div>
+      <div class="metric"><div class="m-lbl" style="color:${ov.unassigned?'#FF3B30':'#34C759'}">Chưa xếp</div><div class="m-val" style="color:${ov.unassigned?'#FF3B30':'#34C759'}">${ov.unassigned}</div></div>
+    </div>
+    <div class="ana-card" style="margin-bottom:16px">
+      <div class="ana-card-h">🕐 CLB trong giờ — sức chứa</div>
+      <div class="clb-grid">${inClbCards}</div>
+      <div class="ana-card-h" style="margin-top:16px">📖 Bồi dưỡng / phụ đạo (trong giờ)</div>
+      <div class="clb-grid">${inPdCards}</div>
+    </div>
+    <div class="ana-card" style="margin-bottom:16px;border:1px solid #E0A93B;background:#FFF9EC">
+      <div class="ana-card-h" style="color:#854F0B">🔔 CLB ngoài giờ — tự nguyện</div>
+      <div class="clb-grid">${outCards}</div>
+    </div>
+    <div class="ana-card" style="margin-bottom:16px">
+      <div class="ana-card-h">📊 Theo lớp — CLB / phụ đạo (trong giờ)</div>
+      ${classRows||'<div style="color:var(--tx2);font-size:13px">Chưa có lớp nào có tiết tự chọn.</div>'}
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--tx2)">
+        <span><span class="dot" style="background:#378ADD;margin-right:5px"></span>Câu lạc bộ</span>
+        <span><span class="dot" style="background:#EF9F27;margin-right:5px"></span>Phụ đạo</span>
+      </div>
+    </div>
+    <div>${alerts}</div>
+  </div>`;
+}
+
+// ── Individual student TKB modal ──
+function openStuTKB(sid){
+  // Find student info
+  let stuName='', stuCls='';
+  for(const [cls,roster] of Object.entries(studentRosters)){
+    const stu=roster.find(s=>s.id===sid);
+    if(stu){stuName=stu.name;stuCls=cls;break;}
+  }
+  document.getElementById('stuTKBName').textContent=stuName;
+  document.getElementById('stuTKBCls').textContent=`Lớp ${stuCls} · Tuần ${weeks[curWeek]?.name||''}`;
+
+  // Build TKB with personalized substitutions
+  const choices=getChoices(sid);
+  const clsData=getWeekData()[stuCls];
+  if(!clsData){document.getElementById('stuTKBContent').innerHTML='<p>Không có dữ liệu TKB.</p>';return;}
+
+  // Header info
+  const hdr=`<div class="stu-tkb-hdr">
+    <h2>Thời khóa biểu cá nhân — ${stuName}</h2>
+    <p>Lớp ${stuCls} &nbsp;·&nbsp; ${weeks[curWeek]?.name||''} &nbsp;·&nbsp; Tuần ${weeks[curWeek]?.date||''}</p>
+  </div>`;
+
+  // Build table same structure as main TKB
+  let html=`<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:12px">
+    <thead><tr>
+      <th style="padding:6px 8px;background:var(--bg);color:var(--tx2);font-size:11px;width:52px">Buổi</th>
+      <th style="padding:6px 4px;background:var(--bg);color:var(--tx2);font-size:11px;width:32px">Tiết</th>
+      ${DAYS.map(d=>`<th style="padding:6px 8px;background:var(--bg);color:var(--tx);font-weight:600;min-width:120px">${d}</th>`).join('')}
+    </tr></thead><tbody>`;
+
+  ['morning','afternoon'].forEach(sess=>{
+    const max=sess==='morning'?5:4;
+    const label=sess==='morning'?'SÁNG':'CHIỀU';
+    for(let slot=0;slot<max;slot++){
+      html+=`<tr>`;
+      if(slot===0) html+=`<td rowspan="${max}" style="text-align:center;font-size:10px;font-weight:700;
+        color:var(--tx3);letter-spacing:.05em;border-right:1px solid var(--sep);
+        border-bottom:2px solid var(--sep)">${label}</td>`;
+      html+=`<td style="text-align:center;font-size:11px;color:var(--tx3);padding:4px;
+        border-right:1px solid var(--sep)">${slot+1}</td>`;
+      for(let day=0;day<5;day++){
+        const raw=((clsData[sess]||[])[day]||[])[slot]||'';
+        const key=`${day}-${sess}-${slot}`;
+        const isTc=getCat(raw)==='ca-nhan-hoa';
+        let cellRaw=raw;
+        if(isTc&&choices[key]) cellRaw=choices[key]; // substitute personal choice
+        const cat=isTc?'ca-nhan-hoa':getCat(cellRaw);
+        const c=colors[cat]||colors['bo-gd'];
+        if(!cellRaw||!cellRaw.trim()){
+          html+=`<td style="border:1px solid var(--sep);padding:6px"></td>`;
+        } else {
+          const parts=cellRaw.split(' - ');
+          const teacher=isTc&&choices[key]?'':parts.pop().trim();
+          const subj=isTc&&choices[key]?choices[key]:parts.join(' - ').trim();
+          const stripe=isTc?'background:repeating-linear-gradient(-45deg,#E0F9F7,#E0F9F7 4px,#C5F0ED 4px,#C5F0ED 8px);border:1.5px dashed #00C7BE':'';
+          html+=`<td style="border:1px solid var(--sep);padding:5px 6px;
+            background:${isTc?'':c.bg};${stripe}">
+            <div style="font-size:12px;font-weight:600;color:${isTc?'#005E57':c.tx}">
+              ${isTc?'👤 ':''}${subj}
+            </div>
+            ${teacher?`<div style="font-size:11px;color:${isTc?'#007A74':c.tx};opacity:.75">${teacher}</div>`:''}
+          </td>`;
+        }
+      }
+      html+=`</tr>`;
+    }
+    // Session separator
+    if(sess==='morning') html+=`<tr><td colspan="7" style="height:6px;background:var(--bg)"></td></tr>`;
+  });
+
+  html+=`</tbody></table></div>`;
+  document.getElementById('stuTKBContent').innerHTML=hdr+html;
+  document.getElementById('stuTKBModal').classList.add('open');
+}
+function closeStuTKB(){document.getElementById('stuTKBModal').classList.remove('open');}
+
+// ─────────────────────────────────────────────────────────────
+// PHÂN QUYỀN SỬA (mật mã chung)
+// ─────────────────────────────────────────────────────────────
+const EDIT_PASSWORD='xtd2026';   // ⚙️ Đổi mật mã chỉnh sửa tại đây
+let canEdit=false;
+
+function updateEditUI(){
+  const btn=document.getElementById('editToggle');
+  if(inSandbox()||canEdit){
+    btn.style.opacity='1';
+    btn.classList.toggle('on',editMode);
+    btn.textContent=editMode?'✅ Đang chỉnh sửa':'✏️ Chỉnh sửa';
+  }else{
+    btn.classList.remove('on');
+    btn.textContent='🔒 Nhập mật mã để sửa';
+  }
+  if(curView==='tkb')renderSidebar();
+}
+function unlockEditing(){
+  canEdit=true; sessionStorage.setItem('xtd-edit','1'); updateEditUI();
+}
+
+// ─────────────────────────────────────────────────────────────
+// ĐỒNG BỘ ĐÁM MÂY (Firestore — dùng chung dự án xanh-tue-duc-apps)
+// ─────────────────────────────────────────────────────────────
+const CLOUD_DOC='xanh-tue-duc-tkb';
+const firebaseConfig={
+  apiKey:"AIzaSyBqUnifWKaPeZ03q9cLMCgQNQbQm6mmX5M",
+  authDomain:"xanh-tue-duc-apps.firebaseapp.com",
+  projectId:"xanh-tue-duc-apps",
+  storageBucket:"xanh-tue-duc-apps.firebasestorage.app",
+  messagingSenderId:"955600480894",
+  appId:"1:955600480894:web:e2bc9d0d34f0d6118dcd83"
+};
+let firebaseDb=null, cloudUnsub=null, isSyncingFromCloud=false, cloudReady=false, pushTimer=null;
+
+function setCloudStatus(s){
+  const el=document.getElementById('cloudStatus'); if(!el) return;
+  el.className='cloud-pill '+(s==='online'?'online':s==='syncing'?'syncing':'off');
+  el.textContent=s==='online'?'● Trực tuyến':s==='syncing'?'● Đang đồng bộ…':'● Ngoại tuyến';
+}
+function stateForCloud(){
+  return JSON.stringify({colors,weeks,teachers,teacherAvail,teacherTypes,studentRosters,studentChoices,subjectReqs,moetStd,clbCatalog});
+}
+function initCloud(){
+  if(typeof firebase==='undefined'){setCloudStatus('off');return;}
+  try{ firebase.initializeApp(firebaseConfig); firebaseDb=firebase.firestore(); }
+  catch(e){ console.error('Firebase init:',e); setCloudStatus('off'); return; }
+  setCloudStatus('syncing');
+  const ref=firebaseDb.collection('tkb_app').doc(CLOUD_DOC);
+  cloudUnsub=ref.onSnapshot(doc=>{
+    if(doc.metadata && doc.metadata.hasPendingWrites) return; // bỏ qua echo của chính mình
+    if(doc.exists){
+      const d=doc.data();
+      if(d && d.json){ try{ applyCloudData(JSON.parse(d.json)); }catch(e){console.error('parse cloud',e);} }
+      cloudReady=true; setCloudStatus('online');
+    }else{
+      cloudReady=true; setCloudStatus('online');
+      if(canEdit) pushToCloud(); // editor đầu tiên tạo dữ liệu trên cloud
+    }
+  }, err=>{ console.error('Firestore:',err); setCloudStatus('off'); });
+}
+function applyCloudData(s){
+  // Không đè khi người dùng đang gõ trong ô nhập
+  const ae=document.activeElement;
+  if(ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return;
+  isSyncingFromCloud=true;
+  if(s.colors) colors=s.colors;
+  if(s.weeks) weeks=s.weeks;
+  if(s.teachers) teachers=s.teachers;
+  if(s.teacherAvail) teacherAvail=s.teacherAvail;
+  if(s.teacherTypes) teacherTypes=s.teacherTypes;
+  if(s.studentRosters) studentRosters=s.studentRosters;
+  if(s.studentChoices) studentChoices=s.studentChoices;
+  if(s.subjectReqs) subjectReqs=s.subjectReqs;
+  if(s.moetStd) moetStd=s.moetStd;
+  if(s.clbCatalog) clbCatalog=s.clbCatalog;
+  if(!weeks[curWeek]) curWeek=Object.keys(weeks)[0]||curWeek;
+  normalizeSlots();
+  lsSave('xtd-colors',colors);lsSave('xtd-weeks',weeks);lsSave('xtd-teachers',teachers);
+  lsSave('xtd-avail',teacherAvail);lsSave('xtd-types',teacherTypes);
+  lsSave('xtd-rosters',studentRosters);lsSave('xtd-choices',studentChoices);lsSave('xtd-subjreqs',subjectReqs);lsSave('xtd-moetstd',moetStd);lsSave('xtd-clb',clbCatalog);
+  _cfltCache=null;
+  rerenderAll();
+  isSyncingFromCloud=false;
+}
+function rerenderAll(){
+  applyColors();renderWeekLabel();renderPills();
+  if(curView==='ana')renderAna();
+  else if(curView==='tv')renderTeachers();
+  else if(curView==='hs')renderStudents();
+  else if(curView==='cfg')renderSettings();
+  else render();
+  updateConflictBadge();
+}
+function schedulePush(){
+  if(!firebaseDb || !cloudReady || isSyncingFromCloud) return;
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(pushToCloud,600);
+}
+function pushToCloud(){
+  if(!firebaseDb || isSyncingFromCloud) return;
+  setCloudStatus('syncing');
+  firebaseDb.collection('tkb_app').doc(CLOUD_DOC).set({json:stateForCloud(),updatedAt:new Date().toISOString()})
+    .then(()=>setCloudStatus('online'))
+    .catch(e=>{console.error('push:',e);setCloudStatus('off');});
+}
+
+// ─────────────────────────────────────────────────────────────
+// SANDBOX — Lịch thử (mã chia sẻ, ai cũng tạo/sửa được, tách khỏi lịch chính)
+// ─────────────────────────────────────────────────────────────
+const SB_COLL='tkb_sandbox';
+function genCode(){const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=a[Math.floor(Math.random()*a.length)];return s;}
+function blankCols(cols){const d={};cols.forEach(c=>d[c]={morning:[[],[],[],[],[]],afternoon:[[],[],[],[],[]]});return d;}
+
+function openSbModal(){
+  document.getElementById('sbName').value='';
+  document.getElementById('sbCols').value='';
+  document.getElementById('sbJoinCode').value='';
+  document.getElementById('sbModal').classList.add('open');
+}
+function closeSbModal(){document.getElementById('sbModal').classList.remove('open');}
+
+function createSandbox(){
+  const name=document.getElementById('sbName').value.trim();
+  if(!name){alert('Hãy đặt tên cho lịch thử (vd: Thử Tiếng Anh, Khóa hè 2026).');return;}
+  let cols=[...new Set(document.getElementById('sbCols').value.split(/[,\n]/).map(s=>s.trim()).filter(Boolean))];
+  if(cols.length===0) cols=['Nhóm 1','Nhóm 2','Nhóm 3'];
+  sandbox={code:genCode(),name,columns:cols,data:blankCols(cols),teachers:[]};
+  closeSbModal();
+  enterSandbox();
+  saveSandbox();   // tạo bản trên cloud (nếu có mạng)
+}
+function joinSandbox(){
+  const code=(document.getElementById('sbJoinCode').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(!code){alert('Nhập mã lịch thử để mở.');return;}
+  if(!firebaseDb){alert('Cần kết nối máy chủ để mở lịch thử bằng mã.');return;}
+  closeSbModal();
+  setCloudStatus('syncing');
+  firebaseDb.collection(SB_COLL).doc(code).get().then(doc=>{
+    if(!doc.exists){alert('Không tìm thấy lịch thử với mã “'+code+'”.');setCloudStatus(inSandbox()?'online':'online');return;}
+    try{ sandbox=JSON.parse(doc.data().json); sandbox.code=code; }catch(e){alert('Dữ liệu lịch thử lỗi.');return;}
+    enterSandbox(); listenSandbox(code);
+  }).catch(e=>{console.error(e);alert('Không mở được lịch thử (kiểm tra mạng/quyền).');setCloudStatus('off');});
+}
+function listenSandbox(code){
+  if(sbUnsub) sbUnsub();
+  sbUnsub=firebaseDb.collection(SB_COLL).doc(code).onSnapshot(doc=>{
+    if(doc.metadata&&doc.metadata.hasPendingWrites) return;
+    if(!doc.exists) return;
+    const ae=document.activeElement; if(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return;
+    try{
+      const s=JSON.parse(doc.data().json); s.code=code; sandbox=s;
+      if(!sandbox.columns.includes(curCls)) curCls=sandbox.columns[0];
+      _cfltCache=null; rerenderAll(); setCloudStatus('online');
+    }catch(e){console.error('sb snapshot',e);}
+  },err=>{console.error('sb listen',err);setCloudStatus('off');});
+}
+function saveSandbox(){
+  if(!sandbox||!firebaseDb) return;
+  clearTimeout(sbPushTimer);
+  setCloudStatus('syncing');
+  sbPushTimer=setTimeout(()=>{
+    firebaseDb.collection(SB_COLL).doc(sandbox.code)
+      .set({json:JSON.stringify(sandbox),updatedAt:new Date().toISOString()})
+      .then(()=>setCloudStatus('online')).catch(e=>{console.error('sb push',e);setCloudStatus('off');});
+  },500);
+}
+function enterSandbox(){
+  mode='sandbox'; editMode=false; curCls=sandbox.columns[0]; _cfltCache=null;
+  updateWorkspaceUI(); updateEditUI(); curView='tkb'; setView('tkb'); renderPills();
+}
+function exitSandbox(){
+  if(sbUnsub){sbUnsub();sbUnsub=null;}
+  sandbox=null; mode='official'; editMode=false;
+  curLv='tieu-hoc'; curCls=LEVELS[curLv][0]; _cfltCache=null;
+  updateWorkspaceUI(); updateEditUI(); setCloudStatus('online'); curView='tkb'; setView('tkb'); renderPills();
+}
+function copySbCode(){
+  if(!sandbox) return;
+  navigator.clipboard?.writeText(sandbox.code);
+  const el=document.getElementById('sbBannerCode'); const old=el.textContent;
+  el.textContent='đã chép ✓'; setTimeout(()=>el.textContent=old,1500);
+}
+function updateWorkspaceUI(){
+  const sb=inSandbox();
+  document.getElementById('sbBanner').style.display=sb?'flex':'none';
+  if(sb){
+    document.getElementById('sbBannerName').textContent=sandbox.name;
+    document.getElementById('sbBannerCode').textContent=sandbox.code;
+  }
+  const seg=document.querySelector('.seg'); if(seg) seg.style.visibility=sb?'hidden':'visible';
+  const wk=document.querySelector('.week-sel'); if(wk) wk.style.display=sb?'none':'flex';
+  ['tabHs','tabClb','tabCfg'].forEach(id=>{const e=document.getElementById(id); if(e) e.style.display=sb?'none':'';});
+  const wsBtn=document.getElementById('wsBtn'); if(wsBtn) wsBtn.textContent=sb?'⬅ Về lịch chính':'🧪 Lịch thử';
+}
+function onWsBtn(){ if(inSandbox()) exitSandbox(); else openSbModal(); }
+
+// ─────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────
+if(sessionStorage.getItem('xtd-edit')==='1') canEdit=true;
+normalizeSlots();
+applyColors();
+renderWeekLabel();
+renderPills();
+render();
+updateConflictBadge();
+updateEditUI();
+initCloud();
+</script>
+</body>
+</html>
